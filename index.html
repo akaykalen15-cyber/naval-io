@@ -2,6 +2,8 @@
 <html>
 <head>
     <title>Zombie.io - Survive the Horde</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
         * {
             margin: 0;
@@ -21,8 +23,12 @@
         #joinScreen, #gameScreen {
             background: #111827;
             padding: 30px;
-            border-radius: 16px;
+            border-radius: 20px;
             text-align: center;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         #joinScreen h1 {
             color: #fbbf24;
@@ -36,7 +42,7 @@
             padding: 12px 20px;
             border-radius: 8px;
             font-size: 16px;
-            width: 250px;
+            width: 100%;
             margin-bottom: 10px;
             outline: none;
         }
@@ -48,13 +54,115 @@
             border-radius: 8px;
             font-size: 16px;
             cursor: pointer;
+            width: 100%;
         }
         #joinScreen button:hover {
             background: #2563eb;
         }
-        #errorMsg {
+        .daily-btn {
+            background: #fbbf24;
+            color: #1f2937;
+            margin-top: 10px;
+        }
+        .daily-btn:hover {
+            background: #f59e0b;
+        }
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .coin-display {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border-radius: 30px;
+            padding: 8px 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        .leaderboard-container {
+            background: #1f2937;
+            border-radius: 12px;
+            padding: 10px;
+            margin: 15px 0;
+            border: 1px solid #374151;
+        }
+        .leaderboard-container h3 {
+            color: #fbbf24;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .leaderboard-list {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 8px;
+            border-bottom: 1px solid #374151;
+            font-size: 12px;
+            color: white;
+        }
+        .leaderboard-item.top-1 { color: #ffd700; font-weight: bold; }
+        .leaderboard-item.top-2 { color: #c0c0c0; }
+        .leaderboard-item.top-3 { color: #cd7f32; }
+        .skin-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .skin-card {
+            background: #1f2937;
+            border-radius: 10px;
+            padding: 8px;
+            text-align: center;
+            border: 2px solid #374151;
+            cursor: pointer;
+        }
+        .skin-card.owned {
+            border-color: #fbbf24;
+            background: #2d3a4e;
+        }
+        .skin-card.equipped {
+            border-color: #3b82f6;
+            background: #1e3a5f;
+        }
+        .skin-preview {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin: 0 auto 5px;
+        }
+        .skin-name {
+            font-size: 10px;
+            color: white;
+        }
+        .skin-price {
+            font-size: 9px;
+            color: #fbbf24;
+        }
+        .errorMsg {
             color: #ef4444;
             margin-top: 10px;
+            font-size: 12px;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #fbbf24;
+            border-radius: 3px;
         }
         #gameContainer {
             position: relative;
@@ -72,7 +180,7 @@
             right: 10px;
             display: flex;
             justify-content: space-between;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
             z-index: 10;
             pointer-events: none;
@@ -81,66 +189,62 @@
             pointer-events: auto;
             background: rgba(0,0,0,0.8);
             backdrop-filter: blur(5px);
-            padding: 8px 15px;
+            padding: 6px 12px;
             border-radius: 8px;
             color: white;
-            font-size: 14px;
+            font-size: 12px;
             border: 1px solid #374151;
         }
         #upgradePanel {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
         }
         .upgrade-btn {
             background: #3b82f6;
             border: none;
             color: white;
-            padding: 5px 12px;
+            padding: 4px 10px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             pointer-events: auto;
         }
         .upgrade-btn:hover {
             background: #2563eb;
         }
         .health-bar {
-            width: 100px;
-            height: 8px;
+            width: 80px;
+            height: 6px;
             background: #374151;
-            border-radius: 4px;
+            border-radius: 3px;
             overflow: hidden;
             display: inline-block;
-            margin-left: 8px;
+            margin-left: 6px;
         }
         .health-fill {
             height: 100%;
             width: 100%;
             background: #22c55e;
-            border-radius: 4px;
+            border-radius: 3px;
             transition: width 0.2s;
         }
         #chatOverlay {
             position: absolute;
             bottom: 10px;
             left: 10px;
-            width: 280px;
+            width: 260px;
             background: rgba(0,0,0,0.85);
             border-radius: 8px;
-            backdrop-filter: blur(5px);
             border: 1px solid #374151;
             z-index: 10;
         }
         #chatMessages {
-            height: 100px;
+            height: 90px;
             overflow-y: auto;
-            padding: 6px;
-            font-size: 11px;
+            padding: 5px;
+            font-size: 10px;
             color: #ccc;
-        }
-        #chatMessages div {
-            margin-bottom: 3px;
         }
         #chatInputArea {
             display: flex;
@@ -153,17 +257,17 @@
             background: #1f2937;
             border: 1px solid #374151;
             color: white;
-            padding: 5px 8px;
-            border-radius: 6px;
+            padding: 4px 6px;
+            border-radius: 5px;
             outline: none;
-            font-size: 11px;
+            font-size: 10px;
         }
         #chatSend {
             background: #3b82f6;
             border: none;
             color: white;
-            padding: 5px 10px;
-            border-radius: 6px;
+            padding: 4px 8px;
+            border-radius: 5px;
             cursor: pointer;
         }
         .chat-system {
@@ -178,11 +282,22 @@
             bottom: 10px;
             right: 10px;
             background: rgba(0,0,0,0.5);
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 10px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 8px;
             color: #888;
             pointer-events: none;
+        }
+        @keyframes float {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-40px); opacity: 0; }
+        }
+        .floating-text {
+            position: fixed;
+            pointer-events: none;
+            font-weight: bold;
+            z-index: 1000;
+            animation: float 1s ease-out forwards;
         }
     </style>
 </head>
@@ -190,9 +305,24 @@
 <div id="joinScreen">
     <h1>🧟 ZOMBIE.io</h1>
     <input type="text" id="usernameInput" placeholder="Enter username" maxlength="20">
-    <br>
     <button id="joinBtn">Join Game</button>
-    <div id="errorMsg"></div>
+    <button id="dailyBtn" class="daily-btn" style="margin-top:10px;">🎁 Daily Reward (500 coins)</button>
+    
+    <div class="stats-container">
+        <div class="coin-display">🪙 <span id="coinAmount">0</span> coins</div>
+    </div>
+    
+    <div class="leaderboard-container">
+        <h3>🏆 TOP 10 PLAYERS 🏆</h3>
+        <div id="leaderboardList" class="leaderboard-list"></div>
+    </div>
+    
+    <div class="leaderboard-container">
+        <h3>🎨 SKIN SHOP</h3>
+        <div class="skin-grid" id="skinGrid"></div>
+    </div>
+    
+    <div id="errorMsg" class="errorMsg"></div>
 </div>
 
 <div id="gameScreen" class="hidden">
@@ -201,36 +331,32 @@
         
         <div id="ui">
             <div class="stats">🎯 Score: <span id="scoreValue">0</span></div>
-            <div class="stats">❤️ Health: <span id="healthValue">100</span>
-                <div class="health-bar"><div id="healthFill" class="health-fill" style="width:100%"></div></div>
-            </div>
-            <div id="waveInfo">🧟 Wave: <span id="waveValue">1</span></div>
+            <div class="stats">🪙 <span id="coinGameValue">0</span></div>
+            <div class="stats">❤️ <span id="healthValue">100</span><div class="health-bar"><div id="healthFill" class="health-fill"></div></div></div>
+            <div class="stats">🔥 <span id="streakValue">0</span></div>
+            <div id="waveInfo">🧟 Wave <span id="waveValue">1</span></div>
             <div id="upgradePanel">
-                <button class="upgrade-btn" data-upgrade="damage">💪 Damage (<span id="damageLevel">1</span>)</button>
-                <button class="upgrade-btn" data-upgrade="fireRate">⚡ Fire Rate (<span id="fireRateLevel">1</span>)</button>
+                <button class="upgrade-btn" data-upgrade="damage">💪 Dmg (<span id="damageLevel">1</span>)</button>
+                <button class="upgrade-btn" data-upgrade="fireRate">⚡ Rate (<span id="fireRateLevel">1</span>)</button>
                 <button class="upgrade-btn" data-upgrade="speed">🏃 Speed (<span id="speedLevel">1</span>)</button>
-                <button class="upgrade-btn" data-upgrade="health">❤️ Health (<span id="healthLevel">1</span>)</button>
+                <button class="upgrade-btn" data-upgrade="health">❤️ HP (<span id="healthLevel">1</span>)</button>
             </div>
         </div>
         
         <div id="chatOverlay">
             <div id="chatMessages"></div>
             <div id="chatInputArea">
-                <input type="text" id="chatInput" placeholder="Type a message..." maxlength="100">
+                <input type="text" id="chatInput" placeholder="Type :) for emojis..." maxlength="100">
                 <button id="chatSend">Send</button>
             </div>
         </div>
-        <div class="controls-hint">⬆️ WASD / Arrow Keys | 🖱️ Mouse to aim | Click to shoot</div>
+        <div class="controls-hint">WASD/Arrows | 🖱️ Aim | Click Shoot | 💀 Headshots = Bonus!</div>
     </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    const socket = io({
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000
-    });
+    const socket = io({ reconnection: true, reconnectionAttempts: 5 });
     
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -240,9 +366,12 @@
     let myId = null;
     let myPlayer = null;
     let currentScore = 0;
+    let currentCoins = 0;
     let currentHealth = 100;
     let currentWave = 1;
+    let currentStreak = 0;
     let bullets = [];
+    let headshotMode = false;
     
     let cameraX = 0, cameraY = 0;
     let mouseX = 0, mouseY = 0;
@@ -251,21 +380,37 @@
     let fireRate = 300;
     
     let upgrades = { damage: 1, fireRateLevel: 1, speed: 3, healthLevel: 1 };
+    let ownedSkins = ['classic'];
+    let equippedSkin = 'classic';
     
     const MAP_WIDTH = 3000;
     const MAP_HEIGHT = 3000;
     
+    const SKINS = {
+        classic: { name: 'Classic', color: '#3b82f6', price: 0 },
+        military: { name: 'Military', color: '#228B22', price: 500 },
+        ninja: { name: 'Ninja', color: '#2c2c2c', price: 1000 },
+        zombie: { name: 'Zombie', color: '#2d5a27', price: 2000 },
+        angel: { name: 'Angel', color: '#ffffff', price: 5000 },
+        demon: { name: 'Demon', color: '#8b0000', price: 10000 }
+    };
+    
     const keys = { w: false, s: false, a: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
     
+    // DOM elements
     const joinScreen = document.getElementById('joinScreen');
     const gameScreen = document.getElementById('gameScreen');
     const usernameInput = document.getElementById('usernameInput');
     const joinBtn = document.getElementById('joinBtn');
+    const dailyBtn = document.getElementById('dailyBtn');
     const errorMsg = document.getElementById('errorMsg');
     const scoreElement = document.getElementById('scoreValue');
+    const coinGameValue = document.getElementById('coinGameValue');
+    const coinAmount = document.getElementById('coinAmount');
     const healthValue = document.getElementById('healthValue');
     const healthFill = document.getElementById('healthFill');
     const waveValue = document.getElementById('waveValue');
+    const streakValue = document.getElementById('streakValue');
     const damageLevelSpan = document.getElementById('damageLevel');
     const fireRateLevelSpan = document.getElementById('fireRateLevel');
     const speedLevelSpan = document.getElementById('speedLevel');
@@ -273,11 +418,26 @@
     const chatMessages = document.getElementById('chatMessages');
     const chatInput = document.getElementById('chatInput');
     const chatSend = document.getElementById('chatSend');
+    const leaderboardList = document.getElementById('leaderboardList');
+    const skinGrid = document.getElementById('skinGrid');
     
-    function formatScore(score) {
-        if (score >= 1_000_000) return (score / 1_000_000).toFixed(1) + 'M';
-        if (score >= 1_000) return (score / 1_000).toFixed(1) + 'K';
-        return score.toString();
+    function formatNumber(n) {
+        if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+        if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
+        return n.toString();
+    }
+    
+    function showFloatingText(text, color, x, y) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        div.className = 'floating-text';
+        div.style.left = x + 'px';
+        div.style.top = y + 'px';
+        div.style.color = color;
+        div.style.fontSize = '20px';
+        div.style.textShadow = '0 0 3px black';
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 1000);
     }
     
     function addChatMessage(sender, message, isSystem = false) {
@@ -303,15 +463,62 @@
     chatSend.onclick = sendChat;
     chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChat(); });
     
-    // FIXED JOIN BUTTON
+    function renderSkinShop() {
+        if (!skinGrid) return;
+        skinGrid.innerHTML = '';
+        for (const [id, skin] of Object.entries(SKINS)) {
+            const owned = ownedSkins.includes(id);
+            const equipped = equippedSkin === id;
+            const card = document.createElement('div');
+            card.className = `skin-card ${owned ? 'owned' : ''} ${equipped ? 'equipped' : ''}`;
+            card.innerHTML = `
+                <div class="skin-preview" style="background: ${skin.color}; border-radius: 50%;"></div>
+                <div class="skin-name">${skin.name}</div>
+                <div class="skin-price">${owned ? (equipped ? '✅' : 'OWNED') : `🪙 ${formatNumber(skin.price)}`}</div>
+            `;
+            if (!owned) {
+                card.onclick = () => {
+                    if (currentCoins >= skin.price) {
+                        socket.emit('buySkin', id);
+                    } else {
+                        addChatMessage('System', `Not enough coins! Need ${formatNumber(skin.price)} coins`, true);
+                    }
+                };
+            } else if (!equipped) {
+                card.onclick = () => {
+                    equippedSkin = id;
+                    localStorage.setItem('zombieSkin', id);
+                    renderSkinShop();
+                    addChatMessage('System', `${skin.name} equipped!`, true);
+                };
+            }
+            skinGrid.appendChild(card);
+        }
+    }
+    
+    function updateLeaderboardDisplay(leaderboard) {
+        if (!leaderboardList) return;
+        let html = '';
+        for (let i = 0; i < leaderboard.length; i++) {
+            const p = leaderboard[i];
+            let className = '';
+            if (i === 0) className = 'top-1';
+            else if (i === 1) className = 'top-2';
+            else if (i === 2) className = 'top-3';
+            html += `<div class="leaderboard-item ${className}">
+                <span>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`} ${p.username}</span>
+                <span>${formatNumber(p.score)} pts</span>
+            </div>`;
+        }
+        leaderboardList.innerHTML = html;
+    }
+    
     joinBtn.onclick = () => {
         const username = usernameInput.value.trim();
         if (username === '') {
             errorMsg.innerText = 'Please enter a username';
             return;
         }
-        
-        console.log('Joining game as:', username);
         
         joinScreen.classList.add('hidden');
         gameScreen.classList.remove('hidden');
@@ -335,20 +542,28 @@
         }, 50);
     };
     
-    socket.on('connect', () => {
-        console.log('Connected to server');
+    dailyBtn.onclick = () => {
+        socket.emit('dailyReward');
+    };
+    
+    socket.on('connect', () => console.log('Connected'));
+    
+    socket.on('leaderboardUpdate', (leaderboard) => {
+        updateLeaderboardDisplay(leaderboard);
     });
     
     socket.on('currentPlayers', (serverPlayers) => {
-        console.log('Received players:', Object.keys(serverPlayers).length);
         players = serverPlayers;
         for (let id in players) {
             if (players[id].username === usernameInput.value.trim()) {
                 myId = id;
                 myPlayer = players[id];
-                currentScore = myPlayer.score;
-                currentHealth = myPlayer.health;
-                scoreElement.innerText = formatScore(currentScore);
+                currentScore = myPlayer.score || 0;
+                currentCoins = myPlayer.coins || 0;
+                currentHealth = myPlayer.health || 100;
+                scoreElement.innerText = formatNumber(currentScore);
+                coinGameValue.innerText = formatNumber(currentCoins);
+                coinAmount.innerText = formatNumber(currentCoins);
                 healthValue.innerText = currentHealth;
                 healthFill.style.width = `${(currentHealth / (myPlayer.maxHealth || 100)) * 100}%`;
                 upgrades.damage = myPlayer.damage || 1;
@@ -356,97 +571,51 @@
                 damageLevelSpan.innerText = upgrades.damage;
                 fireRateLevelSpan.innerText = Math.floor(300 / (myPlayer.fireRate || 300));
                 speedLevelSpan.innerText = Math.floor(upgrades.speed);
-                console.log('My player set!');
+                equippedSkin = myPlayer.skin || 'classic';
+                ownedSkins = myPlayer.skins || ['classic'];
+                renderSkinShop();
             }
         }
     });
     
-    socket.on('currentZombies', (serverZombies) => {
-        zombies = serverZombies;
-        console.log('Zombies loaded:', Object.keys(zombies).length);
-    });
-    
-    socket.on('zombiesUpdate', (serverZombies) => {
-        zombies = serverZombies;
-    });
-    
-    socket.on('waveUpdate', (wave) => {
-        currentWave = wave;
-        waveValue.innerText = wave;
-        addChatMessage('System', `🧟 WAVE ${wave} STARTED!`, true);
-    });
-    
-    socket.on('newPlayer', (playerData) => {
-        players[playerData.id] = playerData;
-        addChatMessage('System', `${playerData.username} joined!`, true);
-    });
-    
-    socket.on('playerMoved', (data) => {
-        if (players[data.id]) {
-            players[data.id].x = data.x;
-            players[data.id].y = data.y;
-        }
-    });
-    
-    socket.on('playerDisconnected', (playerId) => {
-        if (players[playerId]) {
-            addChatMessage('System', `${players[playerId].username} left`, true);
-            delete players[playerId];
-        }
-    });
+    socket.on('currentZombies', (serverZombies) => { zombies = serverZombies; });
+    socket.on('zombiesUpdate', (serverZombies) => { zombies = serverZombies; });
+    socket.on('waveUpdate', (wave) => { currentWave = wave; waveValue.innerText = wave; });
+    socket.on('newPlayer', (playerData) => { players[playerData.id] = playerData; addChatMessage('System', `${playerData.username} joined!`, true); });
+    socket.on('playerMoved', (data) => { if (players[data.id]) { players[data.id].x = data.x; players[data.id].y = data.y; } });
+    socket.on('playerDisconnected', (playerId) => { if (players[playerId]) { addChatMessage('System', `${players[playerId].username} left`, true); delete players[playerId]; } });
     
     socket.on('scoreUpdate', (data) => {
         if (data.id === myId) {
-            currentScore = data.score;
-            scoreElement.innerText = formatScore(currentScore);
+            if (data.score !== undefined) { currentScore = data.score; scoreElement.innerText = formatNumber(currentScore); }
+            if (data.coins !== undefined) { currentCoins = data.coins; coinGameValue.innerText = formatNumber(currentCoins); coinAmount.innerText = formatNumber(currentCoins); }
+            if (data.kills !== undefined) { }
+            if (data.streak !== undefined) { currentStreak = data.streak; streakValue.innerText = currentStreak; }
         }
-        if (players[data.id]) players[data.id].score = data.score;
+        if (players[data.id]) {
+            if (data.score !== undefined) players[data.id].score = data.score;
+            if (data.coins !== undefined) players[data.id].coins = data.coins;
+        }
     });
     
     socket.on('playerUpdate', (data) => {
         if (data.id === myId) {
-            if (data.health !== undefined) {
-                currentHealth = data.health;
-                healthValue.innerText = currentHealth;
-                healthFill.style.width = `${(currentHealth / (data.maxHealth || 100)) * 100}%`;
-            }
-            if (data.damage !== undefined) {
-                upgrades.damage = data.damage;
-                damageLevelSpan.innerText = upgrades.damage;
-            }
-            if (data.fireRate !== undefined) {
-                fireRate = data.fireRate;
-                fireRateLevelSpan.innerText = Math.floor(300 / fireRate);
-            }
-            if (data.speed !== undefined) {
-                upgrades.speed = data.speed;
-                speedLevelSpan.innerText = Math.floor(upgrades.speed);
-            }
-        }
-        if (players[data.id]) {
-            if (data.health !== undefined) players[data.id].health = data.health;
-            if (data.maxHealth !== undefined) players[data.id].maxHealth = data.maxHealth;
+            if (data.health !== undefined) { currentHealth = data.health; healthValue.innerText = currentHealth; healthFill.style.width = `${(currentHealth / (data.maxHealth || 100)) * 100}%`; }
+            if (data.damage !== undefined) { upgrades.damage = data.damage; damageLevelSpan.innerText = upgrades.damage; }
+            if (data.fireRate !== undefined) { fireRate = data.fireRate; fireRateLevelSpan.innerText = Math.floor(300 / fireRate); }
+            if (data.speed !== undefined) { upgrades.speed = data.speed; speedLevelSpan.innerText = Math.floor(upgrades.speed); }
         }
     });
     
     socket.on('bulletShot', (bullet) => {
         bullets.push(bullet);
-        setTimeout(() => {
-            bullets = bullets.filter(b => b.id !== bullet.id);
-        }, 100);
+        setTimeout(() => { bullets = bullets.filter(b => b.id !== bullet.id); }, 100);
     });
     
-    socket.on('zombieKilled', (zombieId) => {
-        delete zombies[zombieId];
-    });
-    
-    socket.on('zombieDamaged', (data) => {
-        if (zombies[data.id]) zombies[data.id].health = data.health;
-    });
-    
-    socket.on('chatMessage', (data) => {
-        addChatMessage(data.username, data.message, data.isSystem);
-    });
+    socket.on('zombieKilled', (zombieId) => { delete zombies[zombieId]; });
+    socket.on('zombieDamaged', (data) => { if (zombies[data.id]) zombies[data.id].health = data.health; });
+    socket.on('chatMessage', (data) => { addChatMessage(data.username, data.message, data.isSystem); });
+    socket.on('skinUnlocked', (skinId) => { ownedSkins.push(skinId); renderSkinShop(); });
     
     document.querySelectorAll('.upgrade-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -479,25 +648,20 @@
         const scaleY = canvas.height / rect.height;
         let canvasX = (e.clientX - rect.left) * scaleX;
         let canvasY = (e.clientY - rect.top) * scaleY;
-        mouseX = (canvasX) + cameraX;
-        mouseY = (canvasY) + cameraY;
+        mouseX = canvasX + cameraX;
+        mouseY = canvasY + cameraY;
     });
     
     canvas.addEventListener('mousedown', (e) => {
-        if (e.button === 0) {
-            isShooting = true;
-        }
+        if (e.button === 0) isShooting = true;
     });
     
     window.addEventListener('mouseup', (e) => {
-        if (e.button === 0) {
-            isShooting = false;
-        }
+        if (e.button === 0) isShooting = false;
     });
     
     function updateShooting() {
         if (!isShooting || !myPlayer) return;
-        
         const now = Date.now();
         if (now - lastShotTime < fireRate) return;
         lastShotTime = now;
@@ -506,18 +670,36 @@
         const dy = mouseY - myPlayer.y;
         const angle = Math.atan2(dy, dx);
         
-        socket.emit('playerShoot', { angle: angle });
+        // Check for headshot (aiming at top of zombie)
+        let isHeadshot = false;
+        for (const id in zombies) {
+            const z = zombies[id];
+            const distToZombie = Math.hypot(myPlayer.x - z.x, myPlayer.y - z.y);
+            if (distToZombie < 100) {
+                const angleToZombie = Math.atan2(z.y - myPlayer.y, z.x - myPlayer.x);
+                const angleDiff = Math.abs(angle - angleToZombie);
+                if (angleDiff < 0.3) {
+                    const headY = z.y - z.size * 0.6;
+                    const distToHead = Math.hypot(myPlayer.x - z.x, myPlayer.y - headY);
+                    if (distToHead < 80) isHeadshot = true;
+                }
+            }
+        }
+        
+        socket.emit('playerShoot', { angle: angle, isHeadshot: isHeadshot });
+        if (isHeadshot) {
+            const rect = canvas.getBoundingClientRect();
+            showFloatingText('HEADSHOT!', '#ff0000', rect.left + canvas.width/2, rect.top + canvas.height/2);
+        }
     }
     
     function movePlayer() {
         if (!myPlayer) return;
-        
         let moveX = 0, moveY = 0;
         if (keys.w || keys.ArrowUp) moveY -= 1;
         if (keys.s || keys.ArrowDown) moveY += 1;
         if (keys.a || keys.ArrowLeft) moveX -= 1;
         if (keys.d || keys.ArrowRight) moveX += 1;
-        
         if (moveX !== 0 || moveY !== 0) {
             const len = Math.hypot(moveX, moveY);
             moveX /= len;
@@ -525,7 +707,6 @@
             myPlayer.x += moveX * myPlayer.speed;
             myPlayer.y += moveY * myPlayer.speed;
         }
-        
         myPlayer.x = Math.min(Math.max(myPlayer.x, 20), MAP_WIDTH - 20);
         myPlayer.y = Math.min(Math.max(myPlayer.y, 20), MAP_HEIGHT - 20);
     }
@@ -551,14 +732,18 @@
             const p = players[id];
             const screenX = p.x - cameraX;
             const screenY = p.y - cameraY;
-            if (screenX > -30 && screenX < canvas.width + 30 && screenY > -30 && screenY < canvas.height + 30) {
+            if (screenX > -50 && screenX < canvas.width + 50 && screenY > -50 && screenY < canvas.height + 50) {
+                const skinColor = SKINS[p.skin]?.color || '#3b82f6';
                 ctx.beginPath();
                 ctx.arc(screenX, screenY, 15, 0, Math.PI * 2);
-                ctx.fillStyle = '#3b82f6';
+                ctx.fillStyle = skinColor;
                 ctx.fill();
                 ctx.fillStyle = 'white';
-                ctx.font = '12px Arial';
+                ctx.font = '10px Arial';
                 ctx.fillText(p.username, screenX - 20, screenY - 20);
+                ctx.fillStyle = '#fbbf24';
+                ctx.font = '8px Arial';
+                ctx.fillText(`💰${formatNumber(p.score)}`, screenX - 15, screenY + 25);
             }
         }
         
@@ -567,41 +752,41 @@
             const z = zombies[id];
             const screenX = z.x - cameraX;
             const screenY = z.y - cameraY;
-            if (screenX > -50 && screenX < canvas.width + 50 && screenY > -50 && screenY < canvas.height + 50) {
+            if (screenX > -60 && screenX < canvas.width + 60 && screenY > -60 && screenY < canvas.height + 60) {
                 ctx.beginPath();
                 ctx.arc(screenX, screenY, z.size, 0, Math.PI * 2);
                 ctx.fillStyle = z.color;
                 ctx.fill();
                 
-                // Draw eyes
+                // Eyes
                 ctx.fillStyle = 'white';
                 ctx.beginPath();
-                ctx.arc(screenX - 6, screenY - 5, 4, 0, Math.PI * 2);
+                ctx.arc(screenX - 6, screenY - 5, 5, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.beginPath();
-                ctx.arc(screenX + 6, screenY - 5, 4, 0, Math.PI * 2);
+                ctx.arc(screenX + 6, screenY - 5, 5, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.fillStyle = '#000';
                 ctx.beginPath();
-                ctx.arc(screenX - 6, screenY - 5, 2, 0, Math.PI * 2);
+                ctx.arc(screenX - 6, screenY - 5, 2.5, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.beginPath();
-                ctx.arc(screenX + 6, screenY - 5, 2, 0, Math.PI * 2);
+                ctx.arc(screenX + 6, screenY - 5, 2.5, 0, Math.PI * 2);
                 ctx.fill();
                 
-                // Draw mouth
+                // Mouth
                 ctx.beginPath();
-                ctx.arc(screenX, screenY + 5, 8, 0.1, Math.PI - 0.1);
+                ctx.arc(screenX, screenY + 5, 10, 0.1, Math.PI - 0.1);
                 ctx.strokeStyle = '#000';
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
-                // Health bar for tanks/boss
+                // Health bar
                 if (z.health > 1) {
                     ctx.fillStyle = '#ef4444';
-                    ctx.fillRect(screenX - 20, screenY - 20, 40, 5);
+                    ctx.fillRect(screenX - 25, screenY - 25, 50, 5);
                     ctx.fillStyle = '#22c55e';
-                    ctx.fillRect(screenX - 20, screenY - 20, 40 * (z.health / z.maxHealth), 5);
+                    ctx.fillRect(screenX - 25, screenY - 25, 50 * (z.health / z.maxHealth), 5);
                 }
             }
         }
@@ -609,7 +794,7 @@
         // Draw bullets
         for (const bullet of bullets) {
             ctx.beginPath();
-            ctx.arc(bullet.x - cameraX, bullet.y - cameraY, 3, 0, Math.PI * 2);
+            ctx.arc(bullet.x - cameraX, bullet.y - cameraY, 4, 0, Math.PI * 2);
             ctx.fillStyle = '#fbbf24';
             ctx.fill();
         }
@@ -617,18 +802,19 @@
         // Draw my player
         const myScreenX = myPlayer.x - cameraX;
         const myScreenY = myPlayer.y - cameraY;
+        const mySkinColor = SKINS[equippedSkin]?.color || '#3b82f6';
         ctx.beginPath();
-        ctx.arc(myScreenX, myScreenY, 15, 0, Math.PI * 2);
-        ctx.fillStyle = '#3b82f6';
+        ctx.arc(myScreenX, myScreenY, 18, 0, Math.PI * 2);
+        ctx.fillStyle = mySkinColor;
         ctx.fill();
         ctx.strokeStyle = 'white';
         ctx.lineWidth = 2;
         ctx.stroke();
         
-        // Draw gun direction
+        // Gun direction
         const angle = Math.atan2(mouseY - myPlayer.y, mouseX - myPlayer.x);
-        const gunX = myScreenX + Math.cos(angle) * 18;
-        const gunY = myScreenY + Math.sin(angle) * 18;
+        const gunX = myScreenX + Math.cos(angle) * 22;
+        const gunY = myScreenY + Math.sin(angle) * 22;
         ctx.beginPath();
         ctx.moveTo(myScreenX, myScreenY);
         ctx.lineTo(gunX, gunY);
@@ -637,15 +823,41 @@
         ctx.stroke();
         
         ctx.fillStyle = 'white';
-        ctx.font = 'bold 14px Arial';
-        ctx.fillText(myPlayer.username, myScreenX - 20, myScreenY - 20);
+        ctx.font = 'bold 12px Arial';
+        ctx.fillText(myPlayer.username, myScreenX - 25, myScreenY - 25);
         
         // Health bar
         ctx.fillStyle = '#ef4444';
-        ctx.fillRect(myScreenX - 20, myScreenY - 30, 40, 5);
+        ctx.fillRect(myScreenX - 25, myScreenY - 35, 50, 5);
         ctx.fillStyle = '#22c55e';
-        ctx.fillRect(myScreenX - 20, myScreenY - 30, 40 * (currentHealth / (myPlayer.maxHealth || 100)), 5);
+        ctx.fillRect(myScreenX - 25, myScreenY - 35, 50 * (currentHealth / (myPlayer.maxHealth || 100)), 5);
+        
+        // Streak effect
+        if (currentStreak >= 5) {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ff6600';
+            ctx.beginPath();
+            ctx.arc(myScreenX, myScreenY, 22, 0, Math.PI * 2);
+            ctx.strokeStyle = '#ff6600';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+        if (currentStreak >= 10) {
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(myScreenX, myScreenY, 25, 0, Math.PI * 2);
+            ctx.strokeStyle = '#ff0000';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
     }
+    
+    // Load saved skin
+    const savedSkin = localStorage.getItem('zombieSkin');
+    if (savedSkin) equippedSkin = savedSkin;
 </script>
 </body>
 </html>
