@@ -1,7 +1,7 @@
 {
-  "name": "zombie-io",
+  "name": "naval-io",
   "version": "1.0.0",
-  "description": "Multiplayer zombie survival game",
+  "description": "Naval.io - Multiplayer Naval Combat Game",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
