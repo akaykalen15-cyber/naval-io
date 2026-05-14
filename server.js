@@ -16,6 +16,10 @@ let wave = 1;
 let zombieIdCounter = 0;
 let allTimeTop10 = [];
 
+// LARGER MAP - 5000x5000
+const MAP_WIDTH = 5000;
+const MAP_HEIGHT = 5000;
+
 const LEADERBOARD_FILE = path.join(__dirname, 'zombie_leaderboard.json');
 
 if (fs.existsSync(LEADERBOARD_FILE)) {
@@ -41,9 +45,6 @@ function updateLeaderboard(username, score) {
     io.emit('leaderboardUpdate', allTimeTop10);
 }
 
-const MAP_WIDTH = 3000;
-const MAP_HEIGHT = 3000;
-
 const zombieTypes = {
     regular: { health: 1, speed: 1.5, points: 10, color: '#2d5a27', size: 20, headshotBonus: 5 },
     fast: { health: 1, speed: 3.0, points: 15, color: '#6b8c42', size: 18, headshotBonus: 8 },
@@ -62,7 +63,7 @@ function getRandomSpawnPosition() {
 }
 
 function spawnZombies() {
-    let zombieCount = Math.min(5 + Math.floor(wave * 1.5), 50);
+    let zombieCount = Math.min(5 + Math.floor(wave * 1.5), 60);
     
     for (let i = 0; i < zombieCount; i++) {
         let type = 'regular';
@@ -93,7 +94,6 @@ function spawnZombies() {
 function checkWaveComplete() {
     if (Object.keys(zombies).length === 0) {
         wave++;
-        // Bonus coins for completing wave
         for (const id in players) {
             players[id].score += wave * 10;
             io.emit('scoreUpdate', { id: id, score: players[id].score });
@@ -171,7 +171,7 @@ io.on('connection', (socket) => {
             username: username,
             x: MAP_WIDTH / 2,
             y: MAP_HEIGHT / 2,
-            radius: 15,
+            radius: 18,
             health: 100,
             maxHealth: 100,
             score: 0,
@@ -183,7 +183,8 @@ io.on('connection', (socket) => {
             lastShot: 0,
             skin: skin,
             kills: 0,
-            headshots: 0
+            headshots: 0,
+            skins: ['classic']
         };
         
         socket.emit('currentPlayers', players);
@@ -250,7 +251,6 @@ io.on('connection', (socket) => {
                         player.kills++;
                         player.streak++;
                         
-                        // Streak bonuses
                         if (player.streak === 5) {
                             player.coins += 50;
                             io.emit('chatMessage', { username: 'System', message: `🔥 ${player.username} is on a 5 KILL STREAK! +50 coins!`, isSystem: true });
@@ -321,6 +321,8 @@ io.on('connection', (socket) => {
         
         player.coins -= price;
         player.skin = skinId;
+        if (!player.skins) player.skins = [];
+        if (!player.skins.includes(skinId)) player.skins.push(skinId);
         io.emit('scoreUpdate', { id: socket.id, coins: player.coins });
         socket.emit('skinUnlocked', skinId);
         socket.emit('chatMessage', { username: 'System', message: `Purchased ${skinId} skin!`, isSystem: true });
@@ -346,7 +348,6 @@ io.on('connection', (socket) => {
         const player = players[socket.id];
         if (!player) return;
         
-        // Emoji shortcuts
         let message = data.message;
         message = message.replace(/:\)/g, '😊').replace(/:\(/g, '😢').replace(/:D/g, '😁').replace(/:P/g, '😛');
         message = message.replace(/zombie/gi, '🧟').replace(/gun/gi, '🔫').replace(/boss/gi, '👑');
@@ -367,6 +368,7 @@ spawnZombies();
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Zombie.io COMPLETE server running on port ${PORT}`);
+    console.log(`🗺️ Map size: ${MAP_WIDTH}x${MAP_HEIGHT}`);
     console.log(`🧟 Wave 1 started!`);
     console.log(`🎯 Headshots enabled!`);
     console.log(`💰 Coin system active!`);
