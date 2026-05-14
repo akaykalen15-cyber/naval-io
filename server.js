@@ -7,7 +7,8 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-app.use(express.static(path.join(__dirname)));
+// FIXED: Serve files from current directory (not public folder)
+app.use(express.static(__dirname));
 
 let players = {};
 let zombies = {};
@@ -17,7 +18,6 @@ let zombieIdCounter = 0;
 const MAP_WIDTH = 3000;
 const MAP_HEIGHT = 3000;
 
-// Zombie types
 const zombieTypes = {
     regular: { health: 1, speed: 1.5, points: 10, color: '#2d5a27', size: 20 },
     fast: { health: 1, speed: 3.0, points: 15, color: '#6b8c42', size: 18 },
@@ -75,7 +75,6 @@ setInterval(() => {
     for (const id in zombies) {
         const zombie = zombies[id];
         
-        // Find nearest player
         let nearestPlayer = null;
         let nearestDist = Infinity;
         for (const pid in players) {
@@ -97,7 +96,6 @@ setInterval(() => {
             }
         }
         
-        // Boundary check
         zombie.x = Math.min(Math.max(zombie.x, 10), MAP_WIDTH - 10);
         zombie.y = Math.min(Math.max(zombie.y, 10), MAP_HEIGHT - 10);
     }
@@ -111,12 +109,10 @@ setInterval(() => {
             const player = players[playerId];
             const dist = Math.hypot(zombie.x - player.x, zombie.y - player.y);
             if (dist < zombie.size + player.radius) {
-                // Zombie damages player
                 player.health = Math.max(0, player.health - 10);
                 io.emit('playerUpdate', { id: playerId, health: player.health });
                 
                 if (player.health <= 0) {
-                    // Player dies
                     player.health = 100;
                     player.score = Math.max(0, player.score - Math.floor(player.score * 0.2));
                     player.x = MAP_WIDTH / 2;
@@ -192,7 +188,6 @@ io.on('connection', (socket) => {
         
         io.emit('bulletShot', bullet);
         
-        // Check bullet collisions after a short delay
         setTimeout(() => {
             for (const zombieId in zombies) {
                 const zombie = zombies[zombieId];
@@ -206,6 +201,7 @@ io.on('connection', (socket) => {
                         io.emit('zombieKilled', zombieId);
                         io.emit('scoreUpdate', { id: socket.id, score: player.score });
                         io.emit('chatMessage', { username: 'System', message: `${player.username} killed a ${zombie.type} zombie! +${zombie.points} points`, isSystem: true });
+                        checkWaveComplete();
                     } else {
                         io.emit('zombieDamaged', { id: zombieId, health: zombie.health });
                     }
