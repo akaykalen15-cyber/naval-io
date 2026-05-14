@@ -49,6 +49,9 @@
             font-size: 16px;
             cursor: pointer;
         }
+        #joinScreen button:hover {
+            background: #2563eb;
+        }
         #errorMsg {
             color: #ef4444;
             margin-top: 10px;
@@ -136,6 +139,9 @@
             font-size: 11px;
             color: #ccc;
         }
+        #chatMessages div {
+            margin-bottom: 3px;
+        }
         #chatInputArea {
             display: flex;
             padding: 5px;
@@ -160,8 +166,13 @@
             border-radius: 6px;
             cursor: pointer;
         }
-        .chat-system { color: #ef4444; font-style: italic; }
-        .hidden { display: none; }
+        .chat-system {
+            color: #ef4444;
+            font-style: italic;
+        }
+        .hidden {
+            display: none;
+        }
         .controls-hint {
             position: absolute;
             bottom: 10px;
@@ -195,10 +206,10 @@
             </div>
             <div id="waveInfo">🧟 Wave: <span id="waveValue">1</span></div>
             <div id="upgradePanel">
-                <button class="upgrade-btn" data-upgrade="damage">💪 Damage (<span id="damageLevel">1</span>) - 100</button>
-                <button class="upgrade-btn" data-upgrade="fireRate">⚡ Fire Rate (<span id="fireRateLevel">1</span>) - 100</button>
-                <button class="upgrade-btn" data-upgrade="speed">🏃 Speed (<span id="speedLevel">1</span>) - 100</button>
-                <button class="upgrade-btn" data-upgrade="health">❤️ Health (<span id="healthLevel">1</span>) - 100</button>
+                <button class="upgrade-btn" data-upgrade="damage">💪 Damage (<span id="damageLevel">1</span>)</button>
+                <button class="upgrade-btn" data-upgrade="fireRate">⚡ Fire Rate (<span id="fireRateLevel">1</span>)</button>
+                <button class="upgrade-btn" data-upgrade="speed">🏃 Speed (<span id="speedLevel">1</span>)</button>
+                <button class="upgrade-btn" data-upgrade="health">❤️ Health (<span id="healthLevel">1</span>)</button>
             </div>
         </div>
         
@@ -215,7 +226,11 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    const socket = io();
+    const socket = io({
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+    });
     
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -288,12 +303,15 @@
     chatSend.onclick = sendChat;
     chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChat(); });
     
+    // FIXED JOIN BUTTON
     joinBtn.onclick = () => {
         const username = usernameInput.value.trim();
         if (username === '') {
             errorMsg.innerText = 'Please enter a username';
             return;
         }
+        
+        console.log('Joining game as:', username);
         
         joinScreen.classList.add('hidden');
         gameScreen.classList.remove('hidden');
@@ -317,7 +335,12 @@
         }, 50);
     };
     
+    socket.on('connect', () => {
+        console.log('Connected to server');
+    });
+    
     socket.on('currentPlayers', (serverPlayers) => {
+        console.log('Received players:', Object.keys(serverPlayers).length);
         players = serverPlayers;
         for (let id in players) {
             if (players[id].username === usernameInput.value.trim()) {
@@ -327,18 +350,20 @@
                 currentHealth = myPlayer.health;
                 scoreElement.innerText = formatScore(currentScore);
                 healthValue.innerText = currentHealth;
-                healthFill.style.width = `${(currentHealth / myPlayer.maxHealth) * 100}%`;
-                upgrades.damage = myPlayer.damage;
-                upgrades.speed = myPlayer.speed;
+                healthFill.style.width = `${(currentHealth / (myPlayer.maxHealth || 100)) * 100}%`;
+                upgrades.damage = myPlayer.damage || 1;
+                upgrades.speed = myPlayer.speed || 3;
                 damageLevelSpan.innerText = upgrades.damage;
-                fireRateLevelSpan.innerText = Math.floor(300 / myPlayer.fireRate);
+                fireRateLevelSpan.innerText = Math.floor(300 / (myPlayer.fireRate || 300));
                 speedLevelSpan.innerText = Math.floor(upgrades.speed);
+                console.log('My player set!');
             }
         }
     });
     
     socket.on('currentZombies', (serverZombies) => {
         zombies = serverZombies;
+        console.log('Zombies loaded:', Object.keys(zombies).length);
     });
     
     socket.on('zombiesUpdate', (serverZombies) => {
@@ -490,4 +515,137 @@
         let moveX = 0, moveY = 0;
         if (keys.w || keys.ArrowUp) moveY -= 1;
         if (keys.s || keys.ArrowDown) moveY += 1;
-        if (keys.a || keys
+        if (keys.a || keys.ArrowLeft) moveX -= 1;
+        if (keys.d || keys.ArrowRight) moveX += 1;
+        
+        if (moveX !== 0 || moveY !== 0) {
+            const len = Math.hypot(moveX, moveY);
+            moveX /= len;
+            moveY /= len;
+            myPlayer.x += moveX * myPlayer.speed;
+            myPlayer.y += moveY * myPlayer.speed;
+        }
+        
+        myPlayer.x = Math.min(Math.max(myPlayer.x, 20), MAP_WIDTH - 20);
+        myPlayer.y = Math.min(Math.max(myPlayer.y, 20), MAP_HEIGHT - 20);
+    }
+    
+    function updateCamera() {
+        if (!myPlayer) return;
+        cameraX = myPlayer.x - canvas.width / 2;
+        cameraY = myPlayer.y - canvas.height / 2;
+        cameraX = Math.min(Math.max(cameraX, 0), MAP_WIDTH - canvas.width);
+        cameraY = Math.min(Math.max(cameraY, 0), MAP_HEIGHT - canvas.height);
+    }
+    
+    function draw() {
+        if (!myPlayer) return;
+        updateCamera();
+        
+        ctx.fillStyle = '#0a2a1a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw other players
+        for (const id in players) {
+            if (id === myId) continue;
+            const p = players[id];
+            const screenX = p.x - cameraX;
+            const screenY = p.y - cameraY;
+            if (screenX > -30 && screenX < canvas.width + 30 && screenY > -30 && screenY < canvas.height + 30) {
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, 15, 0, Math.PI * 2);
+                ctx.fillStyle = '#3b82f6';
+                ctx.fill();
+                ctx.fillStyle = 'white';
+                ctx.font = '12px Arial';
+                ctx.fillText(p.username, screenX - 20, screenY - 20);
+            }
+        }
+        
+        // Draw zombies
+        for (const id in zombies) {
+            const z = zombies[id];
+            const screenX = z.x - cameraX;
+            const screenY = z.y - cameraY;
+            if (screenX > -50 && screenX < canvas.width + 50 && screenY > -50 && screenY < canvas.height + 50) {
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, z.size, 0, Math.PI * 2);
+                ctx.fillStyle = z.color;
+                ctx.fill();
+                
+                // Draw eyes
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(screenX - 6, screenY - 5, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(screenX + 6, screenY - 5, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(screenX - 6, screenY - 5, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(screenX + 6, screenY - 5, 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw mouth
+                ctx.beginPath();
+                ctx.arc(screenX, screenY + 5, 8, 0.1, Math.PI - 0.1);
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Health bar for tanks/boss
+                if (z.health > 1) {
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fillRect(screenX - 20, screenY - 20, 40, 5);
+                    ctx.fillStyle = '#22c55e';
+                    ctx.fillRect(screenX - 20, screenY - 20, 40 * (z.health / z.maxHealth), 5);
+                }
+            }
+        }
+        
+        // Draw bullets
+        for (const bullet of bullets) {
+            ctx.beginPath();
+            ctx.arc(bullet.x - cameraX, bullet.y - cameraY, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fill();
+        }
+        
+        // Draw my player
+        const myScreenX = myPlayer.x - cameraX;
+        const myScreenY = myPlayer.y - cameraY;
+        ctx.beginPath();
+        ctx.arc(myScreenX, myScreenY, 15, 0, Math.PI * 2);
+        ctx.fillStyle = '#3b82f6';
+        ctx.fill();
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Draw gun direction
+        const angle = Math.atan2(mouseY - myPlayer.y, mouseX - myPlayer.x);
+        const gunX = myScreenX + Math.cos(angle) * 18;
+        const gunY = myScreenY + Math.sin(angle) * 18;
+        ctx.beginPath();
+        ctx.moveTo(myScreenX, myScreenY);
+        ctx.lineTo(gunX, gunY);
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText(myPlayer.username, myScreenX - 20, myScreenY - 20);
+        
+        // Health bar
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(myScreenX - 20, myScreenY - 30, 40, 5);
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(myScreenX - 20, myScreenY - 30, 40 * (currentHealth / (myPlayer.maxHealth || 100)), 5);
+    }
+</script>
+</body>
+</html>
