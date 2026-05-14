@@ -9,8 +9,12 @@ const io = socketIO(server);
 
 app.use(express.static(__dirname));
 
-// 👑 ADMIN USERNAME
-const ADMIN_NAME = 'RYZZ';
+// 👑 ADMIN CONFIGURATION
+const ADMIN_USERNAME = 'RYZZ';  // Your admin username
+const ADMIN_PASSWORD = 'naval123';  // 🔐 SEPARATE ADMIN PASSWORD (CHANGE THIS!)
+
+// Store verified admins
+let verifiedAdmins = new Set();
 
 let players = {};
 let enemies = [];
@@ -34,7 +38,7 @@ const petrolStations = [
 
 let playersInStation = {};
 
-// 🚢 REALISTIC SHIPS (Like mk49.io)
+// 🚢 REALISTIC SHIPS
 const ships = {
     rowboat: { name: '🛶 Rowboat', damage: 5, fireRate: 750, speed: 5.0, health: 40, size: 14, color: '#8B6914', level: 0, era: 'Age of Sail' },
     sloop: { name: '⛵ Sloop', damage: 8, fireRate: 700, speed: 4.5, health: 60, size: 16, color: '#CD853F', level: 1, era: 'Age of Sail' },
@@ -162,6 +166,117 @@ function getAvailableShips(level) {
 
 function getShipById(shipId) {
     return ships[shipId] || ships.rowboat;
+}
+
+// ========== ADMIN COMMANDS ==========
+function executeAdminCommand(socket, player, command, args) {
+    if (!verifiedAdmins.has(socket.id)) {
+        socket.emit('chatMessage', { username: 'System', message: '❌ You are not an admin! Use /admin <password> to authenticate.', isSystem: true });
+        return false;
+    }
+    
+    switch(command) {
+        case 'help':
+            socket.emit('chatMessage', { username: 'Admin', message: '📜 Commands: /kick <player> /givepoints <player> <amount> /heal <player> /godmode /spawncrate /spawnenemy /clearall /mapinfo /players /announce <msg>', isSystem: true });
+            break;
+            
+        case 'kick':
+            if (!args[0]) { socket.emit('chatMessage', { username: 'System', message: 'Usage: /kick <player>', isSystem: true }); break; }
+            const targetName = args.join(' ');
+            let kicked = false;
+            for (const [id, p] of Object.entries(players)) {
+                if (p.username.toLowerCase() === targetName.toLowerCase()) {
+                    io.emit('chatMessage', { username: 'Admin', message: `👢 ${p.username} was kicked from the game!`, isSystem: true });
+                    io.to(id).emit('kicked', { reason: 'Kicked by admin' });
+                    delete players[id];
+                    kicked = true;
+                    break;
+                }
+            }
+            if (!kicked) socket.emit('chatMessage', { username: 'System', message: `Player "${targetName}" not found.`, isSystem: true });
+            break;
+            
+        case 'givepoints':
+            if (args.length < 2) { socket.emit('chatMessage', { username: 'System', message: 'Usage: /givepoints <player> <amount>', isSystem: true }); break; }
+            const targetPoints = args[0];
+            const amount = parseInt(args[1]);
+            for (const [id, p] of Object.entries(players)) {
+                if (p.username.toLowerCase() === targetPoints.toLowerCase()) {
+                    p.score += amount;
+                    const newLevel = getLevel(p.score);
+                    if (newLevel > p.level) {
+                        p.level = newLevel;
+                        io.emit('playerUpdate', { id: id, level: newLevel });
+                        io.to(id).emit('availableShips', getAvailableShips(newLevel));
+                    }
+                    io.emit('scoreUpdate', { id: id, score: p.score, level: p.level });
+                    socket.emit('chatMessage', { username: 'System', message: `✅ Gave ${amount} points to ${p.username}`, isSystem: true });
+                    break;
+                }
+            }
+            break;
+            
+        case 'heal':
+            if (!args[0]) { socket.emit('chatMessage', { username: 'System', message: 'Usage: /heal <player>', isSystem: true }); break; }
+            const healTarget = args.join(' ');
+            for (const [id, p] of Object.entries(players)) {
+                if (p.username.toLowerCase() === healTarget.toLowerCase()) {
+                    p.health = p.maxHealth;
+                    io.emit('playerUpdate', { id: id, health: p.health });
+                    socket.emit('chatMessage', { username: 'System', message: `💚 Healed ${p.username} to full health!`, isSystem: true });
+                    break;
+                }
+            }
+            break;
+            
+        case 'godmode':
+            if (!player.godmode) {
+                player.godmode = true;
+                socket.emit('chatMessage', { username: 'System', message: '🛡️ Godmode ENABLED! You are invincible!', isSystem: true });
+            } else {
+                player.godmode = false;
+                socket.emit('chatMessage', { username: 'System', message: '🛡️ Godmode DISABLED!', isSystem: true });
+            }
+            break;
+            
+        case 'spawncrate':
+            spawnSupplyCrate();
+            io.emit('chatMessage', { username: 'Admin', message: '📦 A supply crate has been spawned!', isSystem: true });
+            break;
+            
+        case 'spawnenemy':
+            spawnEnemy();
+            io.emit('enemiesUpdate', enemies);
+            io.emit('chatMessage', { username: 'Admin', message: '⚔️ An enemy ship has been spawned!', isSystem: true });
+            break;
+            
+        case 'clearall':
+            enemies = [];
+            supplyCrates = [];
+            io.emit('enemiesUpdate', enemies);
+            io.emit('cratesUpdate', supplyCrates);
+            io.emit('chatMessage', { username: 'Admin', message: '🗑️ All enemies and crates cleared!', isSystem: true });
+            break;
+            
+        case 'mapinfo':
+            socket.emit('chatMessage', { username: 'System', message: `🗺️ Map size: ${MAP_WIDTH}x${MAP_HEIGHT} | Players: ${Object.keys(players).length} | Enemies: ${enemies.length} | Crates: ${supplyCrates.length}`, isSystem: true });
+            break;
+            
+        case 'players':
+            const playerList = Object.values(players).map(p => `${p.username} (Lvl ${p.level})`).join(', ');
+            socket.emit('chatMessage', { username: 'System', message: `👥 Players online: ${playerList || 'None'}`, isSystem: true });
+            break;
+            
+        case 'announce':
+            if (!args.length) { socket.emit('chatMessage', { username: 'System', message: 'Usage: /announce <message>', isSystem: true }); break; }
+            const announcement = args.join(' ');
+            io.emit('chatMessage', { username: '📢 SERVER', message: announcement, isSystem: true });
+            break;
+            
+        default:
+            socket.emit('chatMessage', { username: 'System', message: `Unknown command: ${command}. Type /help for commands.`, isSystem: true });
+    }
+    return true;
 }
 
 // Enemy spawn interval
@@ -300,6 +415,7 @@ setInterval(() => {
         const enemy = enemies[i];
         for (const id in players) {
             const player = players[id];
+            if (player.godmode) continue; // Skip damage if godmode enabled
             const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
             if (dist < enemy.size + (player.size || 16)) {
                 player.health = Math.max(0, player.health - enemy.damage);
@@ -328,8 +444,8 @@ setInterval(() => {
             const p2 = players[playerIds[j]];
             const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
             if (dist < (p1.size || 16) + (p2.size || 16)) {
-                p1.health = Math.max(0, p1.health - 5);
-                p2.health = Math.max(0, p2.health - 5);
+                if (!p1.godmode) p1.health = Math.max(0, p1.health - 5);
+                if (!p2.godmode) p2.health = Math.max(0, p2.health - 5);
                 io.emit('playerUpdate', { id: playerIds[i], health: p1.health });
                 io.emit('playerUpdate', { id: playerIds[j], health: p2.health });
                 
@@ -376,7 +492,8 @@ io.on('connection', (socket) => {
             color: ship.color,
             era: ship.era,
             kills: 0,
-            isAdmin: username === ADMIN_NAME
+            isAdmin: username === ADMIN_USERNAME,
+            godmode: false
         };
         
         socket.emit('currentPlayers', players);
@@ -387,6 +504,17 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('newPlayer', players[socket.id]);
         
         console.log(`${username} joined with ${ship.name}`);
+    });
+    
+    // Admin authentication
+    socket.on('adminLogin', (password) => {
+        if (password === ADMIN_PASSWORD) {
+            verifiedAdmins.add(socket.id);
+            socket.emit('chatMessage', { username: 'System', message: '✅ Admin authenticated! Type /help for commands.', isSystem: true });
+            console.log(`Admin authenticated: ${players[socket.id]?.username || socket.id}`);
+        } else {
+            socket.emit('chatMessage', { username: 'System', message: '❌ Invalid admin password!', isSystem: true });
+        }
     });
     
     socket.on('changeShip', (data) => {
@@ -495,9 +623,11 @@ io.on('connection', (socket) => {
                 const dx = projectile.endX - target.x;
                 const dy = projectile.endY - target.y;
                 if (Math.hypot(dx, dy) < (target.size || 16)) {
-                    target.health = Math.max(0, target.health - projectile.damage);
-                    io.emit('playerUpdate', { id: id, health: target.health });
-                    if (target.health <= 0) {
+                    if (!target.godmode) {
+                        target.health = Math.max(0, target.health - projectile.damage);
+                        io.emit('playerUpdate', { id: id, health: target.health });
+                    }
+                    if (target.health <= 0 && !target.godmode) {
                         const gain = Math.floor(target.score * 0.1) + 50;
                         player.score += gain;
                         player.kills++;
@@ -527,13 +657,33 @@ io.on('connection', (socket) => {
     socket.on('chatMessage', (data) => {
         const player = players[socket.id];
         if (!player) return;
-        io.emit('chatMessage', { username: player.username, message: data.message });
+        
+        let message = data.message;
+        
+        // Check for admin commands
+        if (message.startsWith('/')) {
+            const parts = message.slice(1).split(' ');
+            const command = parts[0].toLowerCase();
+            const args = parts.slice(1);
+            executeAdminCommand(socket, player, command, args);
+            return;
+        }
+        
+        // Check for admin password
+        if (message.startsWith('/admin ')) {
+            const password = message.slice(7);
+            socket.emit('adminLogin', password);
+            return;
+        }
+        
+        io.emit('chatMessage', { username: player.username, message: message });
     });
     
     socket.on('disconnect', () => {
         if (players[socket.id]) {
             io.emit('playerDisconnected', socket.id);
             delete players[socket.id];
+            verifiedAdmins.delete(socket.id);
         }
     });
 });
@@ -545,5 +695,7 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`🗺️ Map: ${MAP_WIDTH}x${MAP_HEIGHT}`);
     console.log(`🚢 Ships: 21 classes available`);
     console.log(`⛽ Petrol stations: 7 locations`);
+    console.log(`👑 Admin Username: ${ADMIN_USERNAME}`);
+    console.log(`🔐 Admin Password: ${ADMIN_PASSWORD}`);
     console.log(`✨ Ready for connection!\n`);
 });
