@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Naval.io - Sea Warfare</title>
+    <title>Naval.io - Realistic Sea Warfare</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         body {
@@ -14,17 +14,21 @@
             overflow: hidden;
         }
         #joinScreen {
-            background: #111827;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(10px);
             padding: 40px;
             border-radius: 24px;
             text-align: center;
             width: 90%;
             max-width: 500px;
+            border: 1px solid #00bcd4;
+            box-shadow: 0 0 30px rgba(0, 188, 212, 0.2);
         }
         #joinScreen h1 {
             color: #00bcd4;
             margin-bottom: 20px;
             font-size: 42px;
+            text-shadow: 0 0 10px #00bcd4;
         }
         #joinScreen input {
             background: #1f2937;
@@ -58,9 +62,12 @@
             cursor: pointer;
             width: 100%;
             font-weight: bold;
+            transition: all 0.3s;
         }
         #joinBtn:hover {
             background: #0097a7;
+            box-shadow: 0 0 20px #00bcd4;
+            transform: scale(1.02);
         }
         .errorMsg { color: #ef4444; margin-top: 10px; font-size: 14px; }
         .level-info {
@@ -180,6 +187,7 @@
             bottom: 100px;
             right: 10px;
             background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(8px);
             border-radius: 12px;
             padding: 10px;
             border: 1px solid #00bcd4;
@@ -287,6 +295,31 @@
     const MAP_WIDTH = 6000;
     const MAP_HEIGHT = 6000;
     
+    // Wave animation variables
+    let waveOffset = 0;
+    let foamParticles = [];
+    let sunGlint = [];
+    
+    // Initialize sun glints
+    for (let i = 0; i < 50; i++) {
+        sunGlint.push({
+            x: Math.random() * MAP_WIDTH,
+            y: Math.random() * MAP_HEIGHT,
+            size: 2 + Math.random() * 4,
+            phase: Math.random() * Math.PI * 2
+        });
+    }
+    
+    // Initialize foam particles
+    for (let i = 0; i < 100; i++) {
+        foamParticles.push({
+            x: Math.random() * MAP_WIDTH,
+            y: Math.random() * MAP_HEIGHT,
+            life: Math.random(),
+            speed: 0.5 + Math.random() * 1
+        });
+    }
+    
     const keys = { w: false, s: false, a: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
     
     // DOM elements
@@ -340,7 +373,7 @@
         for (const ship of availableShips) {
             const div = document.createElement('div');
             div.className = `ship-option ${selectedShipId === ship.id ? 'selected' : ''}`;
-            div.innerHTML = `${ship.name} (Lvl ${ship.level})`;
+            div.innerHTML = `${ship.name} <span style="font-size:9px; opacity:0.7;">(Lvl ${ship.level})</span>`;
             div.onclick = () => {
                 if (ship.level <= currentLevel) {
                     selectedShipId = ship.id;
@@ -381,6 +414,15 @@
                 socket.emit('playerMovement', { x: myPlayer.x, y: myPlayer.y });
             }
         }, 50);
+        
+        // Animate waves
+        setInterval(() => {
+            waveOffset = (waveOffset + 0.02) % (Math.PI * 2);
+            for (let i = 0; i < foamParticles.length; i++) {
+                foamParticles[i].life += 0.01;
+                if (foamParticles[i].life > 1) foamParticles[i].life = 0;
+            }
+        }, 100);
     };
     
     socket.on('connect', () => console.log('Connected'));
@@ -443,9 +485,6 @@
             if (data.score !== undefined) { currentScore = data.score; scoreElement.innerText = formatNumber(currentScore); }
             if (data.level !== undefined) { currentLevel = data.level; levelElement.innerText = currentLevel; }
             if (data.kills !== undefined) { currentKills = data.kills; killsElement.innerText = currentKills; }
-        }
-        if (players[data.id]) {
-            if (data.score !== undefined) players[data.id].score = data.score;
         }
     });
     
@@ -556,23 +595,92 @@
         cameraY = Math.min(Math.max(cameraY, 0), MAP_HEIGHT - canvas.height);
     }
     
+    // 🌊 REALISTIC OCEAN DRAWING
+    function drawOcean() {
+        // Deep water gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, '#0a3a6a');
+        gradient.addColorStop(0.5, '#0a2a5a');
+        gradient.addColorStop(1, '#061a3a');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Sun reflection
+        const sunX = 400;
+        const sunY = 100;
+        const time = Date.now() * 0.003;
+        for (let i = 0; i < 30; i++) {
+            const offset = Math.sin(time + i) * 10;
+            ctx.beginPath();
+            ctx.ellipse(sunX + offset, sunY + i * 15, 30, 5, 0, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 200, 100, ${0.1 - i * 0.003})`;
+            ctx.fill();
+        }
+        
+        // Animated waves
+        const waveY1 = Math.sin(waveOffset * 2) * 5;
+        const waveY2 = Math.cos(waveOffset * 1.5) * 4;
+        
+        for (let i = 0; i < 40; i++) {
+            const y = i * 25 + waveY1 + Math.sin(i * 0.5 + waveOffset) * 10;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            for (let x = 0; x < canvas.width; x += 50) {
+                ctx.lineTo(x, y + Math.sin(x * 0.01 + waveOffset) * 5);
+            }
+            ctx.lineTo(canvas.width, y);
+            ctx.strokeStyle = `rgba(100, 180, 255, ${0.05 + i * 0.002})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Sun glints on water
+        for (const glint of sunGlint) {
+            const screenX = glint.x - cameraX;
+            const screenY = glint.y - cameraY;
+            if (screenX > 0 && screenX < canvas.width && screenY > 0 && screenY < canvas.height) {
+                const brightness = 0.5 + Math.sin(Date.now() * 0.005 + glint.phase) * 0.5;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, glint.size * brightness, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 200, ${brightness * 0.3})`;
+                ctx.fill();
+            }
+        }
+        
+        // Foam/wake particles
+        for (const foam of foamParticles) {
+            const screenX = foam.x - cameraX;
+            const screenY = foam.y - cameraY + Math.sin(Date.now() * 0.005 + foam.x * 0.01) * 5;
+            if (screenX > 0 && screenX < canvas.width && screenY > 0 && screenY < canvas.height) {
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, 2 + foam.life * 3, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${0.3 - foam.life * 0.2})`;
+                ctx.fill();
+            }
+        }
+        
+        // Cloud shadows
+        const cloudX = (Date.now() * 0.01) % (MAP_WIDTH * 2);
+        for (let i = 0; i < 5; i++) {
+            const shadowX = (cloudX + i * 800) - cameraX;
+            if (shadowX > -400 && shadowX < canvas.width + 400) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+                ctx.beginPath();
+                ctx.ellipse(shadowX, 200, 200, 80, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(shadowX + 150, 180, 150, 60, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+    }
+    
     function draw() {
         if (!myPlayer) return;
         updateCamera();
         
-        // Ocean background
-        ctx.fillStyle = '#0a2a4a';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // Draw water waves
-        ctx.strokeStyle = '#1a4a6a';
-        ctx.lineWidth = 1;
-        for (let i = 0; i < 20; i++) {
-            ctx.beginPath();
-            ctx.moveTo(0, i * 50 + (Date.now() * 0.02) % 50);
-            ctx.lineTo(canvas.width, i * 50 + (Date.now() * 0.02) % 50);
-            ctx.stroke();
-        }
+        // Draw realistic ocean
+        drawOcean();
         
         // Draw petrol stations
         for (const station of petrolStations) {
@@ -580,25 +688,28 @@
             const screenY = station.y - cameraY;
             if (screenX + station.radius > 0 && screenX - station.radius < canvas.width &&
                 screenY + station.radius > 0 && screenY - station.radius < canvas.height) {
+                // Glowing circle
                 ctx.beginPath();
                 ctx.arc(screenX, screenY, station.radius, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(0, 200, 100, 0.15)';
+                ctx.fillStyle = 'rgba(0, 200, 100, 0.1)';
                 ctx.fill();
                 ctx.strokeStyle = '#00ff44';
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
-                ctx.font = '24px Arial';
-                ctx.fillStyle = '#00ff44';
-                ctx.fillText('⛽', screenX - 15, screenY + 10);
+                // Animated ring
+                const pulse = 0.5 + Math.sin(Date.now() * 0.003) * 0.2;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, station.radius * (0.8 + pulse * 0.2), 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(0, 255, 68, ${0.3 + pulse * 0.3})`;
+                ctx.stroke();
                 
-                // Floating particles
-                for (let i = 0; i < 3; i++) {
-                    ctx.fillStyle = `rgba(0, 255, 68, ${0.3 + Math.sin(Date.now() * 0.005 + i) * 0.2})`;
-                    ctx.beginPath();
-                    ctx.arc(screenX + Math.sin(Date.now() * 0.003 + i) * 20, screenY + Math.cos(Date.now() * 0.004 + i) * 20, 3, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+                ctx.font = '28px Arial';
+                ctx.fillStyle = '#00ff44';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#00ff44';
+                ctx.fillText('⛽', screenX - 18, screenY + 12);
+                ctx.shadowBlur = 0;
             }
         }
         
@@ -606,14 +717,30 @@
         for (const crate of crates) {
             const screenX = crate.x - cameraX;
             const screenY = crate.y - cameraY;
-            if (screenX > -30 && screenX < canvas.width + 30 && screenY > -30 && screenY < canvas.height + 30) {
+            if (screenX > -40 && screenX < canvas.width + 40 && screenY > -40 && screenY < canvas.height + 40) {
+                // Shadow
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.beginPath();
+                ctx.ellipse(screenX + 2, screenY + 15, 16, 6, 0, 0, Math.PI * 2);
+                ctx.fill();
+                // Crate body
                 ctx.fillStyle = crate.color;
-                ctx.fillRect(screenX - 12, screenY - 10, 24, 20);
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                ctx.fillRect(screenX - 14, screenY - 10, 28, 22);
                 ctx.fillStyle = '#8B4513';
-                ctx.fillRect(screenX - 14, screenY - 12, 28, 4);
-                ctx.font = '16px Arial';
+                ctx.fillRect(screenX - 16, screenY - 12, 32, 4);
+                ctx.font = '20px Arial';
                 ctx.fillStyle = 'white';
-                ctx.fillText(crate.icon, screenX - 8, screenY + 6);
+                ctx.fillText(crate.icon, screenX - 10, screenY + 6);
+                ctx.shadowBlur = 0;
+                
+                // Bobbing animation
+                const bob = Math.sin(Date.now() * 0.005) * 3;
+                if (bob > 0) {
+                    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                    ctx.fillRect(screenX - 14, screenY - 10 + bob, 28, 22);
+                }
             }
         }
         
@@ -621,21 +748,70 @@
         for (const enemy of enemies) {
             const screenX = enemy.x - cameraX;
             const screenY = enemy.y - cameraY;
-            if (screenX > -50 && screenX < canvas.width + 50 && screenY > -50 && screenY < canvas.height + 50) {
+            if (screenX > -60 && screenX < canvas.width + 60 && screenY > -60 && screenY < canvas.height + 60) {
+                // Wake effect
+                ctx.beginPath();
+                ctx.moveTo(screenX - enemy.size, screenY + 5);
+                ctx.lineTo(screenX - enemy.size - 15, screenY);
+                ctx.lineTo(screenX - enemy.size, screenY - 5);
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.fill();
+                
                 ctx.beginPath();
                 ctx.arc(screenX, screenY, enemy.size, 0, Math.PI * 2);
                 ctx.fillStyle = enemy.color;
                 ctx.fill();
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                // Eyes
                 ctx.fillStyle = 'white';
-                ctx.font = '12px Arial';
-                ctx.fillText(enemy.name, screenX - 25, screenY - 20);
+                ctx.beginPath();
+                ctx.arc(screenX - 6, screenY - 4, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(screenX + 6, screenY - 4, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(screenX - 6, screenY - 4, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(screenX + 6, screenY - 4, 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Angry eyebrows
+                ctx.beginPath();
+                ctx.moveTo(screenX - 10, screenY - 8);
+                ctx.lineTo(screenX - 3, screenY - 7);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(screenX + 10, screenY - 8);
+                ctx.lineTo(screenX + 3, screenY - 7);
+                ctx.stroke();
+                
+                ctx.fillStyle = 'white';
+                ctx.font = '11px Arial';
+                ctx.fillText(enemy.name, screenX - 25, screenY - 18);
                 
                 // Health bar
                 const healthPercent = enemy.health / enemy.maxHealth;
                 ctx.fillStyle = '#ef4444';
-                ctx.fillRect(screenX - 25, screenY - 30, 50, 5);
+                ctx.fillRect(screenX - 25, screenY - 28, 50, 5);
                 ctx.fillStyle = '#22c55e';
-                ctx.fillRect(screenX - 25, screenY - 30, 50 * healthPercent, 5);
+                ctx.fillRect(screenX - 25, screenY - 28, 50 * healthPercent, 5);
+                
+                // Rare enemy glow
+                if (enemy.rare) {
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#ff00ff';
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, enemy.size + 3, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#ff00ff';
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                }
             }
         }
         
@@ -645,17 +821,38 @@
             const p = players[id];
             const screenX = p.x - cameraX;
             const screenY = p.y - cameraY;
-            if (screenX > -50 && screenX < canvas.width + 50 && screenY > -50 && screenY < canvas.height + 50) {
+            if (screenX > -60 && screenX < canvas.width + 60 && screenY > -60 && screenY < canvas.height + 60) {
+                // Wake
+                ctx.beginPath();
+                ctx.moveTo(screenX - (p.size || 16), screenY + 5);
+                ctx.lineTo(screenX - (p.size || 16) - 20, screenY);
+                ctx.lineTo(screenX - (p.size || 16), screenY - 5);
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.fill();
+                
                 ctx.beginPath();
                 ctx.arc(screenX, screenY, p.size || 16, 0, Math.PI * 2);
                 ctx.fillStyle = p.color || '#ef4444';
                 ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                
                 ctx.fillStyle = 'white';
                 ctx.font = '12px Arial';
-                ctx.fillText(p.username, screenX - 20, screenY - 20);
-                ctx.fillStyle = '#fbbf24';
-                ctx.font = '10px Arial';
-                ctx.fillText(`Lvl ${p.level}`, screenX - 15, screenY + 25);
+                ctx.fillText(p.username, screenX - 20, screenY - 22);
+                
+                // Era badge
+                if (p.era) {
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.font = '9px Arial';
+                    ctx.fillText(p.era, screenX - 15, screenY + 25);
+                }
+                
+                // Level indicator
+                ctx.fillStyle = '#00bcd4';
+                ctx.font = 'bold 10px Arial';
+                ctx.fillText(`Lvl ${p.level}`, screenX + 10, screenY - 18);
             }
         }
         
@@ -670,15 +867,32 @@
             ctx.arc(screenX, screenY, 5, 0, Math.PI * 2);
             ctx.fillStyle = '#fbbf24';
             ctx.fill();
-            ctx.shadowBlur = 8;
+            ctx.shadowBlur = 10;
             ctx.shadowColor = '#fbbf24';
             ctx.fill();
             ctx.shadowBlur = 0;
+            
+            // Trail
+            ctx.beginPath();
+            ctx.moveTo(screenX - 8, screenY);
+            ctx.lineTo(screenX, screenY - 4);
+            ctx.lineTo(screenX, screenY + 4);
+            ctx.fillStyle = 'rgba(251,191,36,0.5)';
+            ctx.fill();
         }
         
         // Draw my player
         const myScreenX = myPlayer.x - cameraX;
         const myScreenY = myPlayer.y - cameraY;
+        
+        // Wake effect
+        ctx.beginPath();
+        ctx.moveTo(myScreenX - shipSize, myScreenY + 8);
+        ctx.lineTo(myScreenX - shipSize - 25, myScreenY);
+        ctx.lineTo(myScreenX - shipSize, myScreenY - 8);
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fill();
+        
         ctx.beginPath();
         ctx.arc(myScreenX, myScreenY, shipSize, 0, Math.PI * 2);
         ctx.fillStyle = '#3b82f6';
@@ -689,30 +903,49 @@
         
         // Gun direction
         const angle = Math.atan2(mouseY - myPlayer.y, mouseX - myPlayer.x);
-        const gunX = myScreenX + Math.cos(angle) * (shipSize + 5);
-        const gunY = myScreenY + Math.sin(angle) * (shipSize + 5);
+        const gunX = myScreenX + Math.cos(angle) * (shipSize + 8);
+        const gunY = myScreenY + Math.sin(angle) * (shipSize + 8);
         ctx.beginPath();
         ctx.moveTo(myScreenX, myScreenY);
         ctx.lineTo(gunX, gunY);
         ctx.strokeStyle = '#fbbf24';
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 5;
         ctx.stroke();
+        
+        // Muzzle flash when shooting
+        if (isShooting && Date.now() - lastShotTime < 100) {
+            ctx.beginPath();
+            ctx.arc(gunX, gunY, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#ff6600';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(gunX, gunY, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffff00';
+            ctx.fill();
+        }
         
         ctx.fillStyle = 'white';
         ctx.font = 'bold 14px Arial';
-        ctx.fillText(myPlayer.username, myScreenX - 25, myScreenY - 25);
+        ctx.fillText(myPlayer.username, myScreenX - 25, myScreenY - 28);
+        
+        // Era badge
+        if (myPlayer.era) {
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = '10px Arial';
+            ctx.fillText(myPlayer.era, myScreenX - 20, myScreenY + 28);
+        }
+        
+        // Level indicator
+        ctx.fillStyle = '#00bcd4';
+        ctx.font = 'bold 12px Arial';
+        ctx.fillText(`Lvl ${currentLevel}`, myScreenX + 15, myScreenY - 22);
         
         // Health bar
         const healthPercent = currentHealth / (myPlayer.maxHealth || 100);
         ctx.fillStyle = '#ef4444';
-        ctx.fillRect(myScreenX - 30, myScreenY - 38, 60, 6);
+        ctx.fillRect(myScreenX - 30, myScreenY - 42, 60, 6);
         ctx.fillStyle = '#22c55e';
-        ctx.fillRect(myScreenX - 30, myScreenY - 38, 60 * healthPercent, 6);
-        
-        // Level indicator
-        ctx.fillStyle = '#fbbf24';
-        ctx.font = 'bold 12px Arial';
-        ctx.fillText(`Lvl ${currentLevel}`, myScreenX + 15, myScreenY - 20);
+        ctx.fillRect(myScreenX - 30, myScreenY - 42, 60 * healthPercent, 6);
     }
 </script>
 </body>
