@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Naval.io - Realistic Sea Warfare</title>
+    <title>Naval.io - Real Warship Battle</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         body {
@@ -339,6 +339,160 @@
     const chatInput = document.getElementById('chatInput');
     const chatSend = document.getElementById('chatSend');
     
+    // ========== REALISTIC WARSHIP DRAWING FUNCTION ==========
+    function drawWarship(x, y, size, color, angle, isEnemy = false, shipType = 'default') {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        
+        // Ship shadow/reflection
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = 'rgba(0,0,0,0.4)';
+        
+        // Hull shape (elongated oval/cigar shape like a real ship)
+        ctx.beginPath();
+        ctx.ellipse(0, 0, size * 1.2, size * 0.7, 0, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = '#1a1a2e';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Deck line
+        ctx.beginPath();
+        ctx.ellipse(0, -size * 0.15, size * 1.1, size * 0.35, 0, 0, Math.PI * 2);
+        ctx.fillStyle = isEnemy ? '#8B4513' : '#654321';
+        ctx.fill();
+        
+        // Bow (front point)
+        ctx.beginPath();
+        ctx.moveTo(size * 1.3, -size * 0.2);
+        ctx.lineTo(size * 1.8, 0);
+        ctx.lineTo(size * 1.3, size * 0.2);
+        ctx.fillStyle = isEnemy ? '#5a3a2a' : '#4a6a8a';
+        ctx.fill();
+        
+        // Stern (back flag)
+        ctx.beginPath();
+        ctx.moveTo(-size * 1.3, -size * 0.3);
+        ctx.lineTo(-size * 1.6, -size * 0.5);
+        ctx.lineTo(-size * 1.6, -size * 0.1);
+        ctx.fillStyle = '#ef4444';
+        ctx.fill();
+        
+        // Main turret (gun)
+        const turretSize = size * 0.5;
+        ctx.beginPath();
+        ctx.ellipse(0, -size * 0.1, turretSize, turretSize * 0.6, 0, 0, Math.PI * 2);
+        ctx.fillStyle = isEnemy ? '#4a4a4a' : '#2c3e50';
+        ctx.fill();
+        ctx.strokeStyle = '#1a1a2e';
+        ctx.stroke();
+        
+        // Gun barrel (points forward from turret)
+        ctx.beginPath();
+        ctx.moveTo(size * 0.7, -size * 0.1);
+        ctx.lineTo(size * 1.3, -size * 0.15);
+        ctx.lineTo(size * 1.3, -size * 0.05);
+        ctx.lineTo(size * 0.7, -size * 0.05);
+        ctx.fillStyle = '#7f8c8d';
+        ctx.fill();
+        
+        // Secondary turret (smaller, rear)
+        ctx.beginPath();
+        ctx.ellipse(-size * 0.5, -size * 0.05, turretSize * 0.6, turretSize * 0.4, 0, 0, Math.PI * 2);
+        ctx.fillStyle = isEnemy ? '#5a5a5a' : '#34495e';
+        ctx.fill();
+        
+        // Bridge/superstructure
+        ctx.fillStyle = isEnemy ? '#3a3a3a' : '#2c3e50';
+        ctx.fillRect(-size * 0.3, -size * 0.5, size * 0.6, size * 0.4);
+        
+        // Radar dome
+        ctx.beginPath();
+        ctx.arc(-size * 0.1, -size * 0.65, size * 0.15, 0, Math.PI * 2);
+        ctx.fillStyle = '#e74c3c';
+        ctx.fill();
+        
+        // Smokestack
+        ctx.fillStyle = isEnemy ? '#5a5a5a' : '#7f8c8d';
+        ctx.fillRect(size * 0.3, -size * 0.55, size * 0.25, size * 0.4);
+        
+        // Smoke particles
+        const smokeTime = Date.now() * 0.005;
+        for (let i = 0; i < 3; i++) {
+            ctx.beginPath();
+            ctx.arc(size * 0.42 + Math.sin(smokeTime + i) * 2, -size * 0.6 - i * 3, 3, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(100, 100, 100, ${0.3 - i * 0.1})`;
+            ctx.fill();
+        }
+        
+        // Waterline/water reflection
+        ctx.beginPath();
+        ctx.ellipse(0, size * 0.5, size * 1.3, size * 0.2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(100, 200, 255, 0.3)';
+        ctx.fill();
+        
+        // Windows/portholes
+        for (let i = -1; i <= 1; i++) {
+            ctx.beginPath();
+            ctx.arc(i * size * 0.4, -size * 0.2, 2, 0, Math.PI * 2);
+            ctx.fillStyle = '#f1c40f';
+            ctx.fill();
+        }
+        
+        // Hull number/name
+        ctx.font = `bold ${Math.floor(size * 0.3)}px monospace`;
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowBlur = 2;
+        ctx.fillText(isEnemy ? 'ENEMY' : 'NAVY', -size * 0.6, size * 0.3);
+        
+        ctx.shadowBlur = 0;
+        ctx.restore();
+    }
+    
+    // Enemy ship drawing (scary variant)
+    function drawEnemyShip(x, y, size, color, angle, isRare = false) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        
+        // Dark hull
+        ctx.beginPath();
+        ctx.ellipse(0, 0, size * 1.2, size * 0.7, 0, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        
+        // Spiky bow for enemy
+        ctx.beginPath();
+        ctx.moveTo(size * 1.3, -size * 0.2);
+        ctx.lineTo(size * 1.9, 0);
+        ctx.lineTo(size * 1.3, size * 0.2);
+        ctx.fillStyle = '#8B0000';
+        ctx.fill();
+        
+        // Skull icon on enemy
+        ctx.font = `${Math.floor(size * 0.8)}px Arial`;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('💀', -size * 0.3, -size * 0.2);
+        
+        // Red glowing eyes
+        if (isRare) {
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#ff0000';
+        }
+        ctx.beginPath();
+        ctx.arc(size * 0.4, -size * 0.3, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#ff0000';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(-size * 0.3, -size * 0.3, 3, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.shadowBlur = 0;
+        ctx.restore();
+    }
+    
     function formatNumber(n) {
         if (n >= 10000) return (n / 1000).toFixed(1) + 'K';
         return n.toString();
@@ -619,7 +773,6 @@
         
         // Animated waves
         const waveY1 = Math.sin(waveOffset * 2) * 5;
-        const waveY2 = Math.cos(waveOffset * 1.5) * 4;
         
         for (let i = 0; i < 40; i++) {
             const y = i * 25 + waveY1 + Math.sin(i * 0.5 + waveOffset) * 10;
@@ -658,21 +811,6 @@
                 ctx.fill();
             }
         }
-        
-        // Cloud shadows
-        const cloudX = (Date.now() * 0.01) % (MAP_WIDTH * 2);
-        for (let i = 0; i < 5; i++) {
-            const shadowX = (cloudX + i * 800) - cameraX;
-            if (shadowX > -400 && shadowX < canvas.width + 400) {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-                ctx.beginPath();
-                ctx.ellipse(shadowX, 200, 200, 80, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.ellipse(shadowX + 150, 180, 150, 60, 0, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
     }
     
     function draw() {
@@ -688,7 +826,6 @@
             const screenY = station.y - cameraY;
             if (screenX + station.radius > 0 && screenX - station.radius < canvas.width &&
                 screenY + station.radius > 0 && screenY - station.radius < canvas.height) {
-                // Glowing circle
                 ctx.beginPath();
                 ctx.arc(screenX, screenY, station.radius, 0, Math.PI * 2);
                 ctx.fillStyle = 'rgba(0, 200, 100, 0.1)';
@@ -697,7 +834,6 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
-                // Animated ring
                 const pulse = 0.5 + Math.sin(Date.now() * 0.003) * 0.2;
                 ctx.beginPath();
                 ctx.arc(screenX, screenY, station.radius * (0.8 + pulse * 0.2), 0, Math.PI * 2);
@@ -718,12 +854,10 @@
             const screenX = crate.x - cameraX;
             const screenY = crate.y - cameraY;
             if (screenX > -40 && screenX < canvas.width + 40 && screenY > -40 && screenY < canvas.height + 40) {
-                // Shadow
                 ctx.fillStyle = 'rgba(0,0,0,0.3)';
                 ctx.beginPath();
                 ctx.ellipse(screenX + 2, screenY + 15, 16, 6, 0, 0, Math.PI * 2);
                 ctx.fill();
-                // Crate body
                 ctx.fillStyle = crate.color;
                 ctx.shadowBlur = 5;
                 ctx.shadowColor = 'rgba(0,0,0,0.3)';
@@ -734,125 +868,51 @@
                 ctx.fillStyle = 'white';
                 ctx.fillText(crate.icon, screenX - 10, screenY + 6);
                 ctx.shadowBlur = 0;
-                
-                // Bobbing animation
-                const bob = Math.sin(Date.now() * 0.005) * 3;
-                if (bob > 0) {
-                    ctx.fillStyle = 'rgba(255,255,255,0.3)';
-                    ctx.fillRect(screenX - 14, screenY - 10 + bob, 28, 22);
-                }
             }
         }
         
-        // Draw enemies
+        // Draw enemies - using REAL WARSHIP draw
         for (const enemy of enemies) {
             const screenX = enemy.x - cameraX;
             const screenY = enemy.y - cameraY;
             if (screenX > -60 && screenX < canvas.width + 60 && screenY > -60 && screenY < canvas.height + 60) {
-                // Wake effect
-                ctx.beginPath();
-                ctx.moveTo(screenX - enemy.size, screenY + 5);
-                ctx.lineTo(screenX - enemy.size - 15, screenY);
-                ctx.lineTo(screenX - enemy.size, screenY - 5);
-                ctx.fillStyle = 'rgba(255,255,255,0.3)';
-                ctx.fill();
-                
-                ctx.beginPath();
-                ctx.arc(screenX, screenY, enemy.size, 0, Math.PI * 2);
-                ctx.fillStyle = enemy.color;
-                ctx.fill();
-                ctx.strokeStyle = '#000';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-                
-                // Eyes
-                ctx.fillStyle = 'white';
-                ctx.beginPath();
-                ctx.arc(screenX - 6, screenY - 4, 4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(screenX + 6, screenY - 4, 4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.arc(screenX - 6, screenY - 4, 2, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(screenX + 6, screenY - 4, 2, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Angry eyebrows
-                ctx.beginPath();
-                ctx.moveTo(screenX - 10, screenY - 8);
-                ctx.lineTo(screenX - 3, screenY - 7);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(screenX + 10, screenY - 8);
-                ctx.lineTo(screenX + 3, screenY - 7);
-                ctx.stroke();
-                
-                ctx.fillStyle = 'white';
-                ctx.font = '11px Arial';
-                ctx.fillText(enemy.name, screenX - 25, screenY - 18);
+                // Calculate angle towards player for enemy orientation
+                const enemyAngle = myPlayer ? Math.atan2(myPlayer.y - enemy.y, myPlayer.x - enemy.x) : 0;
+                drawEnemyShip(screenX, screenY, enemy.size || 18, enemy.color || '#8B0000', enemyAngle, enemy.rare);
                 
                 // Health bar
                 const healthPercent = enemy.health / enemy.maxHealth;
                 ctx.fillStyle = '#ef4444';
-                ctx.fillRect(screenX - 25, screenY - 28, 50, 5);
+                ctx.fillRect(screenX - 25, screenY - 40, 50, 5);
                 ctx.fillStyle = '#22c55e';
-                ctx.fillRect(screenX - 25, screenY - 28, 50 * healthPercent, 5);
+                ctx.fillRect(screenX - 25, screenY - 40, 50 * healthPercent, 5);
                 
-                // Rare enemy glow
-                if (enemy.rare) {
-                    ctx.shadowBlur = 15;
-                    ctx.shadowColor = '#ff00ff';
-                    ctx.beginPath();
-                    ctx.arc(screenX, screenY, enemy.size + 3, 0, Math.PI * 2);
-                    ctx.strokeStyle = '#ff00ff';
-                    ctx.stroke();
-                    ctx.shadowBlur = 0;
-                }
+                // Enemy name
+                ctx.fillStyle = 'white';
+                ctx.font = '10px Arial';
+                ctx.fillText(enemy.name, screenX - 20, screenY - 45);
             }
         }
         
-        // Draw other players
+        // Draw other players - using REAL WARSHIP
         for (const id in players) {
             if (id === myId) continue;
             const p = players[id];
             const screenX = p.x - cameraX;
             const screenY = p.y - cameraY;
             if (screenX > -60 && screenX < canvas.width + 60 && screenY > -60 && screenY < canvas.height + 60) {
-                // Wake
-                ctx.beginPath();
-                ctx.moveTo(screenX - (p.size || 16), screenY + 5);
-                ctx.lineTo(screenX - (p.size || 16) - 20, screenY);
-                ctx.lineTo(screenX - (p.size || 16), screenY - 5);
-                ctx.fillStyle = 'rgba(255,255,255,0.3)';
-                ctx.fill();
-                
-                ctx.beginPath();
-                ctx.arc(screenX, screenY, p.size || 16, 0, Math.PI * 2);
-                ctx.fillStyle = p.color || '#ef4444';
-                ctx.fill();
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
+                // Calculate angle towards mouse/aim direction (if available)
+                const playerAngle = p.angle || 0;
+                drawWarship(screenX, screenY, p.size || 16, p.color || '#3b82f6', playerAngle, false);
                 
                 ctx.fillStyle = 'white';
                 ctx.font = '12px Arial';
-                ctx.fillText(p.username, screenX - 20, screenY - 22);
-                
-                // Era badge
-                if (p.era) {
-                    ctx.fillStyle = '#fbbf24';
-                    ctx.font = '9px Arial';
-                    ctx.fillText(p.era, screenX - 15, screenY + 25);
-                }
+                ctx.fillText(p.username, screenX - 20, screenY - 50);
                 
                 // Level indicator
                 ctx.fillStyle = '#00bcd4';
                 ctx.font = 'bold 10px Arial';
-                ctx.fillText(`Lvl ${p.level}`, screenX + 10, screenY - 18);
+                ctx.fillText(`Lvl ${p.level}`, screenX + 15, screenY - 45);
             }
         }
         
@@ -881,71 +941,42 @@
             ctx.fill();
         }
         
-        // Draw my player
+        // Draw my player - REAL WARSHIP with gun direction
         const myScreenX = myPlayer.x - cameraX;
         const myScreenY = myPlayer.y - cameraY;
+        const aimAngle = Math.atan2(mouseY - myPlayer.y, mouseX - myPlayer.x);
         
-        // Wake effect
-        ctx.beginPath();
-        ctx.moveTo(myScreenX - shipSize, myScreenY + 8);
-        ctx.lineTo(myScreenX - shipSize - 25, myScreenY);
-        ctx.lineTo(myScreenX - shipSize, myScreenY - 8);
-        ctx.fillStyle = 'rgba(255,255,255,0.4)';
-        ctx.fill();
-        
-        ctx.beginPath();
-        ctx.arc(myScreenX, myScreenY, shipSize, 0, Math.PI * 2);
-        ctx.fillStyle = '#3b82f6';
-        ctx.fill();
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        // Gun direction
-        const angle = Math.atan2(mouseY - myPlayer.y, mouseX - myPlayer.x);
-        const gunX = myScreenX + Math.cos(angle) * (shipSize + 8);
-        const gunY = myScreenY + Math.sin(angle) * (shipSize + 8);
-        ctx.beginPath();
-        ctx.moveTo(myScreenX, myScreenY);
-        ctx.lineTo(gunX, gunY);
-        ctx.strokeStyle = '#fbbf24';
-        ctx.lineWidth = 5;
-        ctx.stroke();
+        drawWarship(myScreenX, myScreenY, shipSize, '#3b82f6', aimAngle, false);
         
         // Muzzle flash when shooting
         if (isShooting && Date.now() - lastShotTime < 100) {
+            const gunX = myScreenX + Math.cos(aimAngle) * (shipSize + 10);
+            const gunY = myScreenY + Math.sin(aimAngle) * (shipSize + 10);
             ctx.beginPath();
-            ctx.arc(gunX, gunY, 8, 0, Math.PI * 2);
+            ctx.arc(gunX, gunY, 10, 0, Math.PI * 2);
             ctx.fillStyle = '#ff6600';
             ctx.fill();
             ctx.beginPath();
-            ctx.arc(gunX, gunY, 4, 0, Math.PI * 2);
+            ctx.arc(gunX, gunY, 5, 0, Math.PI * 2);
             ctx.fillStyle = '#ffff00';
             ctx.fill();
         }
         
         ctx.fillStyle = 'white';
         ctx.font = 'bold 14px Arial';
-        ctx.fillText(myPlayer.username, myScreenX - 25, myScreenY - 28);
-        
-        // Era badge
-        if (myPlayer.era) {
-            ctx.fillStyle = '#fbbf24';
-            ctx.font = '10px Arial';
-            ctx.fillText(myPlayer.era, myScreenX - 20, myScreenY + 28);
-        }
+        ctx.fillText(myPlayer.username, myScreenX - 25, myScreenY - 55);
         
         // Level indicator
         ctx.fillStyle = '#00bcd4';
         ctx.font = 'bold 12px Arial';
-        ctx.fillText(`Lvl ${currentLevel}`, myScreenX + 15, myScreenY - 22);
+        ctx.fillText(`Lvl ${currentLevel}`, myScreenX + 20, myScreenY - 48);
         
         // Health bar
         const healthPercent = currentHealth / (myPlayer.maxHealth || 100);
         ctx.fillStyle = '#ef4444';
-        ctx.fillRect(myScreenX - 30, myScreenY - 42, 60, 6);
+        ctx.fillRect(myScreenX - 35, myScreenY - 65, 70, 6);
         ctx.fillStyle = '#22c55e';
-        ctx.fillRect(myScreenX - 30, myScreenY - 42, 60 * healthPercent, 6);
+        ctx.fillRect(myScreenX - 35, myScreenY - 65, 70 * healthPercent, 6);
     }
 </script>
 </body>
