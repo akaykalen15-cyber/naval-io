@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Zombie.io - Survive the Horde</title>
+    <title>Zombie.io - Zoom</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
@@ -205,7 +205,7 @@
             z-index: 10;
             pointer-events: none;
         }
-        .stats, #waveInfo, #upgradePanel {
+        .stats, #waveInfo, #upgradePanel, #zoomControl {
             pointer-events: auto;
             background: rgba(0,0,0,0.8);
             backdrop-filter: blur(5px);
@@ -214,6 +214,24 @@
             color: white;
             font-size: 14px;
             border: 1px solid #374151;
+        }
+        #zoomControl {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        #zoomControl button {
+            background: #3b82f6;
+            border: none;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #zoomLevel {
+            min-width: 50px;
+            text-align: center;
         }
         #upgradePanel {
             display: flex;
@@ -357,6 +375,12 @@
             <div class="stats">❤️ <span id="healthValue">100</span><div class="health-bar"><div id="healthFill" class="health-fill"></div></div></div>
             <div class="stats">🔥 <span id="streakValue">0</span></div>
             <div id="waveInfo">🧟 Wave <span id="waveValue">1</span></div>
+            <div id="zoomControl">
+                <button id="zoomOutBtn">-</button>
+                <span id="zoomLevel">100%</span>
+                <button id="zoomInBtn">+</button>
+                <button id="zoomResetBtn">Reset</button>
+            </div>
             <div id="upgradePanel">
                 <button class="upgrade-btn" data-upgrade="damage">💪 Damage (<span id="damageLevel">1</span>)</button>
                 <button class="upgrade-btn" data-upgrade="fireRate">⚡ Rate (<span id="fireRateLevel">1</span>)</button>
@@ -372,7 +396,7 @@
                 <button id="chatSend">Send</button>
             </div>
         </div>
-        <div class="controls-hint">WASD/Arrows | 🖱️ Aim | Click Shoot | 💀 Headshots = Bonus!</div>
+        <div class="controls-hint">WASD/Arrows | 🖱️ Aim | Click Shoot | 🔍 Scroll Zoom</div>
     </div>
 </div>
 
@@ -400,11 +424,15 @@
     let lastShotTime = 0;
     let fireRate = 300;
     
+    // ZOOM SETTINGS
+    let zoom = 1.0;
+    const MIN_ZOOM = 0.3;
+    const MAX_ZOOM = 2.5;
+    
     let upgrades = { damage: 1, fireRateLevel: 1, speed: 3, healthLevel: 1 };
     let ownedSkins = ['classic'];
     let equippedSkin = 'classic';
     
-    // BIGGER MAP - 5000x5000
     const MAP_WIDTH = 5000;
     const MAP_HEIGHT = 5000;
     
@@ -442,12 +470,27 @@
     const chatSend = document.getElementById('chatSend');
     const leaderboardList = document.getElementById('leaderboardList');
     const skinGrid = document.getElementById('skinGrid');
+    const zoomLevelSpan = document.getElementById('zoomLevel');
     
     function formatNumber(n) {
         if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
         if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
         return n.toString();
     }
+    
+    function setZoom(newZoom) {
+        zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, newZoom));
+        zoomLevelSpan.innerText = `${Math.round(zoom * 100)}%`;
+    }
+    
+    document.getElementById('zoomInBtn').onclick = () => setZoom(zoom + 0.1);
+    document.getElementById('zoomOutBtn').onclick = () => setZoom(zoom - 0.1);
+    document.getElementById('zoomResetBtn').onclick = () => setZoom(1.0);
+    
+    canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        setZoom(e.deltaY < 0 ? zoom + 0.1 : zoom - 0.1);
+    });
     
     function showFloatingText(text, color, x, y) {
         const div = document.createElement('div');
@@ -463,7 +506,7 @@
     function addChatMessage(sender, message, isSystem = false) {
         const div = document.createElement('div');
         if (isSystem) {
-            div.innerHTML = `<span class="chat-system">🔔 ${message}</span>";
+            div.innerHTML = `<span class="chat-system">🔔 ${message}</span>`;
         } else {
             div.innerHTML = `<span>💬 ${sender}:</span> ${message}`;
         }
@@ -660,8 +703,8 @@
         const scaleY = canvas.height / rect.height;
         let canvasX = (e.clientX - rect.left) * scaleX;
         let canvasY = (e.clientY - rect.top) * scaleY;
-        mouseX = canvasX + cameraX;
-        mouseY = canvasY + cameraY;
+        mouseX = (canvasX / zoom) + cameraX;
+        mouseY = (canvasY / zoom) + cameraY;
         mouseX = Math.min(Math.max(mouseX, 0), MAP_WIDTH);
         mouseY = Math.min(Math.max(mouseY, 0), MAP_HEIGHT);
     });
@@ -726,10 +769,12 @@
     
     function updateCamera() {
         if (!myPlayer) return;
-        cameraX = myPlayer.x - canvas.width / 2;
-        cameraY = myPlayer.y - canvas.height / 2;
-        cameraX = Math.min(Math.max(cameraX, 0), MAP_WIDTH - canvas.width);
-        cameraY = Math.min(Math.max(cameraY, 0), MAP_HEIGHT - canvas.height);
+        const effectiveWidth = canvas.width / zoom;
+        const effectiveHeight = canvas.height / zoom;
+        cameraX = myPlayer.x - effectiveWidth / 2;
+        cameraY = myPlayer.y - effectiveHeight / 2;
+        cameraX = Math.min(Math.max(cameraX, 0), MAP_WIDTH - effectiveWidth);
+        cameraY = Math.min(Math.max(cameraY, 0), MAP_HEIGHT - effectiveHeight);
     }
     
     function draw() {
@@ -739,21 +784,25 @@
         ctx.fillStyle = '#0a2a1a';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Draw grid for better orientation
+        // Adaptive grid based on zoom
+        let gridSize = 200;
+        if (zoom < 0.6) gridSize = 500;
+        if (zoom < 0.4) gridSize = 1000;
+        if (zoom > 1.5) gridSize = 100;
+        
         ctx.strokeStyle = '#1a4a2a';
         ctx.lineWidth = 1;
-        const gridSize = 200;
         const startX = Math.floor(cameraX / gridSize) * gridSize;
         const startY = Math.floor(cameraY / gridSize) * gridSize;
-        for (let x = startX; x < cameraX + canvas.width; x += gridSize) {
-            const screenX = x - cameraX;
+        for (let x = startX; x < cameraX + canvas.width / zoom; x += gridSize) {
+            const screenX = (x - cameraX) * zoom;
             ctx.beginPath();
             ctx.moveTo(screenX, 0);
             ctx.lineTo(screenX, canvas.height);
             ctx.stroke();
         }
-        for (let y = startY; y < cameraY + canvas.height; y += gridSize) {
-            const screenY = y - cameraY;
+        for (let y = startY; y < cameraY + canvas.height / zoom; y += gridSize) {
+            const screenY = (y - cameraY) * zoom;
             ctx.beginPath();
             ctx.moveTo(0, screenY);
             ctx.lineTo(canvas.width, screenY);
@@ -764,63 +813,64 @@
         for (const id in players) {
             if (id === myId) continue;
             const p = players[id];
-            const screenX = p.x - cameraX;
-            const screenY = p.y - cameraY;
+            const screenX = (p.x - cameraX) * zoom;
+            const screenY = (p.y - cameraY) * zoom;
             if (screenX > -60 && screenX < canvas.width + 60 && screenY > -60 && screenY < canvas.height + 60) {
                 const skinColor = SKINS[p.skin]?.color || '#3b82f6';
                 ctx.beginPath();
-                ctx.arc(screenX, screenY, 18, 0, Math.PI * 2);
+                ctx.arc(screenX, screenY, 18 * zoom, 0, Math.PI * 2);
                 ctx.fillStyle = skinColor;
                 ctx.fill();
                 ctx.fillStyle = 'white';
-                ctx.font = '12px Arial';
-                ctx.fillText(p.username, screenX - 25, screenY - 25);
+                ctx.font = `${12 * zoom}px Arial`;
+                ctx.fillText(p.username, screenX - 25 * zoom, screenY - 25 * zoom);
                 ctx.fillStyle = '#fbbf24';
-                ctx.font = '10px Arial';
-                ctx.fillText(`💰${formatNumber(p.score)}`, screenX - 18, screenY + 28);
+                ctx.font = `${10 * zoom}px Arial`;
+                ctx.fillText(`💰${formatNumber(p.score)}`, screenX - 18 * zoom, screenY + 28 * zoom);
             }
         }
         
         // Draw zombies
         for (const id in zombies) {
             const z = zombies[id];
-            const screenX = z.x - cameraX;
-            const screenY = z.y - cameraY;
+            const screenX = (z.x - cameraX) * zoom;
+            const screenY = (z.y - cameraY) * zoom;
+            const size = z.size * zoom;
             if (screenX > -80 && screenX < canvas.width + 80 && screenY > -80 && screenY < canvas.height + 80) {
                 ctx.beginPath();
-                ctx.arc(screenX, screenY, z.size, 0, Math.PI * 2);
+                ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
                 ctx.fillStyle = z.color;
                 ctx.fill();
                 
                 // Eyes
                 ctx.fillStyle = 'white';
                 ctx.beginPath();
-                ctx.arc(screenX - 7, screenY - 6, 6, 0, Math.PI * 2);
+                ctx.arc(screenX - 7 * zoom, screenY - 6 * zoom, 6 * zoom, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.beginPath();
-                ctx.arc(screenX + 7, screenY - 6, 6, 0, Math.PI * 2);
+                ctx.arc(screenX + 7 * zoom, screenY - 6 * zoom, 6 * zoom, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.fillStyle = '#000';
                 ctx.beginPath();
-                ctx.arc(screenX - 7, screenY - 6, 3, 0, Math.PI * 2);
+                ctx.arc(screenX - 7 * zoom, screenY - 6 * zoom, 3 * zoom, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.beginPath();
-                ctx.arc(screenX + 7, screenY - 6, 3, 0, Math.PI * 2);
+                ctx.arc(screenX + 7 * zoom, screenY - 6 * zoom, 3 * zoom, 0, Math.PI * 2);
                 ctx.fill();
                 
                 // Mouth
                 ctx.beginPath();
-                ctx.arc(screenX, screenY + 6, 12, 0.1, Math.PI - 0.1);
+                ctx.arc(screenX, screenY + 6 * zoom, 12 * zoom, 0.1, Math.PI - 0.1);
                 ctx.strokeStyle = '#000';
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 2 * zoom;
                 ctx.stroke();
                 
                 // Health bar for tanks/boss
                 if (z.health > 1) {
                     ctx.fillStyle = '#ef4444';
-                    ctx.fillRect(screenX - 30, screenY - 30, 60, 6);
+                    ctx.fillRect(screenX - 30 * zoom, screenY - 30 * zoom, 60 * zoom, 6 * zoom);
                     ctx.fillStyle = '#22c55e';
-                    ctx.fillRect(screenX - 30, screenY - 30, 60 * (z.health / z.maxHealth), 6);
+                    ctx.fillRect(screenX - 30 * zoom, screenY - 30 * zoom, 60 * zoom * (z.health / z.maxHealth), 6 * zoom);
                 }
             }
         }
@@ -828,66 +878,67 @@
         // Draw bullets
         for (const bullet of bullets) {
             ctx.beginPath();
-            ctx.arc(bullet.x - cameraX, bullet.y - cameraY, 5, 0, Math.PI * 2);
+            ctx.arc((bullet.x - cameraX) * zoom, (bullet.y - cameraY) * zoom, 5 * zoom, 0, Math.PI * 2);
             ctx.fillStyle = '#fbbf24';
             ctx.fill();
-            ctx.shadowBlur = 5;
+            ctx.shadowBlur = 5 * zoom;
             ctx.shadowColor = '#fbbf24';
             ctx.fill();
             ctx.shadowBlur = 0;
         }
         
         // Draw my player
-        const myScreenX = myPlayer.x - cameraX;
-        const myScreenY = myPlayer.y - cameraY;
+        const myScreenX = (myPlayer.x - cameraX) * zoom;
+        const myScreenY = (myPlayer.y - cameraY) * zoom;
+        const mySize = 22 * zoom;
         const mySkinColor = SKINS[equippedSkin]?.color || '#3b82f6';
         ctx.beginPath();
-        ctx.arc(myScreenX, myScreenY, 22, 0, Math.PI * 2);
+        ctx.arc(myScreenX, myScreenY, mySize, 0, Math.PI * 2);
         ctx.fillStyle = mySkinColor;
         ctx.fill();
         ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2 * zoom;
         ctx.stroke();
         
         // Gun direction
         const angle = Math.atan2(mouseY - myPlayer.y, mouseX - myPlayer.x);
-        const gunX = myScreenX + Math.cos(angle) * 28;
-        const gunY = myScreenY + Math.sin(angle) * 28;
+        const gunX = myScreenX + Math.cos(angle) * (28 * zoom);
+        const gunY = myScreenY + Math.sin(angle) * (28 * zoom);
         ctx.beginPath();
         ctx.moveTo(myScreenX, myScreenY);
         ctx.lineTo(gunX, gunY);
         ctx.strokeStyle = '#fbbf24';
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 4 * zoom;
         ctx.stroke();
         
         ctx.fillStyle = 'white';
-        ctx.font = 'bold 14px Arial';
-        ctx.fillText(myPlayer.username, myScreenX - 30, myScreenY - 30);
+        ctx.font = `bold ${14 * zoom}px Arial`;
+        ctx.fillText(myPlayer.username, myScreenX - 30 * zoom, myScreenY - 30 * zoom);
         
         // Health bar
         ctx.fillStyle = '#ef4444';
-        ctx.fillRect(myScreenX - 30, myScreenY - 42, 60, 6);
+        ctx.fillRect(myScreenX - 30 * zoom, myScreenY - 42 * zoom, 60 * zoom, 6 * zoom);
         ctx.fillStyle = '#22c55e';
-        ctx.fillRect(myScreenX - 30, myScreenY - 42, 60 * (currentHealth / (myPlayer.maxHealth || 100)), 6);
+        ctx.fillRect(myScreenX - 30 * zoom, myScreenY - 42 * zoom, 60 * zoom * (currentHealth / (myPlayer.maxHealth || 100)), 6 * zoom);
         
         // Streak effects
         if (currentStreak >= 5) {
-            ctx.shadowBlur = 15;
+            ctx.shadowBlur = 15 * zoom;
             ctx.shadowColor = '#ff6600';
             ctx.beginPath();
-            ctx.arc(myScreenX, myScreenY, 26, 0, Math.PI * 2);
+            ctx.arc(myScreenX, myScreenY, 26 * zoom, 0, Math.PI * 2);
             ctx.strokeStyle = '#ff6600';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 3 * zoom;
             ctx.stroke();
             ctx.shadowBlur = 0;
         }
         if (currentStreak >= 10) {
-            ctx.shadowBlur = 20;
+            ctx.shadowBlur = 20 * zoom;
             ctx.shadowColor = '#ff0000';
             ctx.beginPath();
-            ctx.arc(myScreenX, myScreenY, 30, 0, Math.PI * 2);
+            ctx.arc(myScreenX, myScreenY, 30 * zoom, 0, Math.PI * 2);
             ctx.strokeStyle = '#ff0000';
-            ctx.lineWidth = 4;
+            ctx.lineWidth = 4 * zoom;
             ctx.stroke();
             ctx.shadowBlur = 0;
         }
