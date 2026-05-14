@@ -9,7 +9,7 @@ const io = socketIO(server);
 
 app.use(express.static(__dirname));
 
-// 👑 ADMIN USERNAME (YOU!)
+// 👑 ADMIN USERNAME
 const ADMIN_NAME = 'RYZZ';
 
 let players = {};
@@ -36,50 +36,37 @@ let playersInStation = {};
 
 // 🚢 REALISTIC SHIPS (Like mk49.io)
 const ships = {
-    // Level 0 - Small boats
-    rowboat: { name: '🛶 Rowboat', damage: 5, fireRate: 750, speed: 5.0, health: 40, size: 12, color: '#8B6914', level: 0, era: 'Age of Sail' },
-    sloop: { name: '⛵ Sloop', damage: 8, fireRate: 700, speed: 4.5, health: 60, size: 14, color: '#CD853F', level: 1, era: 'Age of Sail' },
-    cutter: { name: '🚤 Cutter', damage: 11, fireRate: 680, speed: 4.2, health: 80, size: 16, color: '#DAA520', level: 2, era: 'Age of Sail' },
-    
-    // Level 3-5 - Sailing warships
-    brig: { name: '⚓ Brig', damage: 15, fireRate: 650, speed: 3.8, health: 110, size: 18, color: '#A0522D', level: 3, era: 'Age of Sail' },
-    schooner: { name: '🏴‍☠️ Schooner', damage: 19, fireRate: 620, speed: 3.5, health: 140, size: 20, color: '#8B0000', level: 4, era: 'Age of Sail' },
-    corsair: { name: '💀 Corsair', damage: 24, fireRate: 580, speed: 3.2, health: 180, size: 22, color: '#6B0000', level: 5, era: 'Age of Sail' },
-    
-    // Level 6-8 - Napoleonic warships
-    frigate: { name: '⚔️ Frigate', damage: 30, fireRate: 550, speed: 2.8, health: 240, size: 24, color: '#4a0000', level: 6, era: 'Napoleonic' },
-    galleon: { name: '🛡️ Galleon', damage: 38, fireRate: 520, speed: 2.5, health: 320, size: 26, color: '#3a0000', level: 7, era: 'Spanish Armada' },
-    manowar: { name: '👑 Man O\' War', damage: 48, fireRate: 480, speed: 2.2, health: 420, size: 28, color: '#2a0000', level: 8, era: 'British Empire' },
-    
-    // Level 9-11 - Ironclads & WWI Battleships
-    ironclad: { name: '🚢 Ironclad', damage: 60, fireRate: 450, speed: 2.0, health: 550, size: 30, color: '#1a1a2e', level: 9, era: 'American Civil War' },
-    dreadnought: { name: '🔥 Dreadnought', damage: 75, fireRate: 420, speed: 1.8, health: 700, size: 32, color: '#ff4400', level: 10, era: 'WWI Era' },
-    thunderer: { name: '⚡ Thunderer', damage: 95, fireRate: 380, speed: 1.6, health: 900, size: 34, color: '#ff6600', level: 11, era: 'WWI Era' },
-    
-    // Level 12-14 - WWII Warships
-    cruiser: { name: '🎯 Cruiser', damage: 120, fireRate: 350, speed: 1.5, health: 1100, size: 36, color: '#3399ff', level: 12, era: 'WWII Era' },
-    battleship: { name: '⚓ Battleship', damage: 150, fireRate: 320, speed: 1.4, health: 1400, size: 38, color: '#3366ff', level: 13, era: 'WWII Era' },
-    aircraft_carrier: { name: '💣 Aircraft Carrier', damage: 100, fireRate: 280, speed: 1.2, health: 1800, size: 42, color: '#00ccff', level: 14, era: 'WWII Era' },
-    
-    // Level 15-17 - Modern Warships
-    destroyer: { name: '🚁 Destroyer', damage: 180, fireRate: 300, speed: 1.6, health: 1600, size: 40, color: '#00ff88', level: 15, era: 'Modern' },
-    missile_cruiser: { name: '🔫 Missile Cruiser', damage: 220, fireRate: 260, speed: 1.4, health: 2200, size: 44, color: '#ff00ff', level: 16, era: 'Modern' },
-    battlecruiser: { name: '🎖️ Battlecruiser', damage: 270, fireRate: 240, speed: 1.3, health: 2800, size: 48, color: '#ff6600', level: 17, era: 'Modern' },
-    
-    // Level 18-20 - Future / Ultimate Ships
-    flagship: { name: '👑 Flagship', damage: 330, fireRate: 220, speed: 1.2, health: 3600, size: 52, color: '#ffd700', level: 18, era: 'Future' },
-    leviathan: { name: '🌊 Leviathan', damage: 400, fireRate: 200, speed: 1.1, health: 4600, size: 56, color: '#ff00cc', level: 19, era: 'Future' },
-    annihilator: { name: '⚡ Annihilator', damage: 500, fireRate: 180, speed: 1.0, health: 6000, size: 60, color: '#ff0044', level: 20, era: 'Future' }
+    rowboat: { name: '🛶 Rowboat', damage: 5, fireRate: 750, speed: 5.0, health: 40, size: 14, color: '#8B6914', level: 0, era: 'Age of Sail' },
+    sloop: { name: '⛵ Sloop', damage: 8, fireRate: 700, speed: 4.5, health: 60, size: 16, color: '#CD853F', level: 1, era: 'Age of Sail' },
+    cutter: { name: '🚤 Cutter', damage: 11, fireRate: 680, speed: 4.2, health: 80, size: 18, color: '#DAA520', level: 2, era: 'Age of Sail' },
+    brig: { name: '⚓ Brig', damage: 15, fireRate: 650, speed: 3.8, health: 110, size: 20, color: '#A0522D', level: 3, era: 'Age of Sail' },
+    schooner: { name: '🏴‍☠️ Schooner', damage: 19, fireRate: 620, speed: 3.5, health: 140, size: 22, color: '#8B0000', level: 4, era: 'Age of Sail' },
+    corsair: { name: '💀 Corsair', damage: 24, fireRate: 580, speed: 3.2, health: 180, size: 24, color: '#6B0000', level: 5, era: 'Age of Sail' },
+    frigate: { name: '⚔️ Frigate', damage: 30, fireRate: 550, speed: 2.8, health: 240, size: 26, color: '#4a6a8a', level: 6, era: 'Napoleonic' },
+    galleon: { name: '🛡️ Galleon', damage: 38, fireRate: 520, speed: 2.5, health: 320, size: 28, color: '#3a5a7a', level: 7, era: 'Spanish Armada' },
+    manowar: { name: '👑 Man O\' War', damage: 48, fireRate: 480, speed: 2.2, health: 420, size: 30, color: '#2a4a6a', level: 8, era: 'British Empire' },
+    ironclad: { name: '🚢 Ironclad', damage: 60, fireRate: 450, speed: 2.0, health: 550, size: 32, color: '#1a1a2e', level: 9, era: 'American Civil War' },
+    dreadnought: { name: '🔥 Dreadnought', damage: 75, fireRate: 420, speed: 1.8, health: 700, size: 34, color: '#ff4400', level: 10, era: 'WWI Era' },
+    thunderer: { name: '⚡ Thunderer', damage: 95, fireRate: 380, speed: 1.6, health: 900, size: 36, color: '#ff6600', level: 11, era: 'WWI Era' },
+    cruiser: { name: '🎯 Cruiser', damage: 120, fireRate: 350, speed: 1.5, health: 1100, size: 38, color: '#3399ff', level: 12, era: 'WWII Era' },
+    battleship: { name: '⚓ Battleship', damage: 150, fireRate: 320, speed: 1.4, health: 1400, size: 40, color: '#3366ff', level: 13, era: 'WWII Era' },
+    aircraft_carrier: { name: '💣 Aircraft Carrier', damage: 100, fireRate: 280, speed: 1.2, health: 1800, size: 44, color: '#00ccff', level: 14, era: 'WWII Era' },
+    destroyer: { name: '🚁 Destroyer', damage: 180, fireRate: 300, speed: 1.6, health: 1600, size: 42, color: '#00ff88', level: 15, era: 'Modern' },
+    missile_cruiser: { name: '🔫 Missile Cruiser', damage: 220, fireRate: 260, speed: 1.4, health: 2200, size: 46, color: '#ff00ff', level: 16, era: 'Modern' },
+    battlecruiser: { name: '🎖️ Battlecruiser', damage: 270, fireRate: 240, speed: 1.3, health: 2800, size: 50, color: '#ff6600', level: 17, era: 'Modern' },
+    flagship: { name: '👑 Flagship', damage: 330, fireRate: 220, speed: 1.2, health: 3600, size: 54, color: '#ffd700', level: 18, era: 'Future' },
+    leviathan: { name: '🌊 Leviathan', damage: 400, fireRate: 200, speed: 1.1, health: 4600, size: 58, color: '#ff00cc', level: 19, era: 'Future' },
+    annihilator: { name: '⚡ Annihilator', damage: 500, fireRate: 180, speed: 1.0, health: 6000, size: 62, color: '#ff0044', level: 20, era: 'Future' }
 };
 
 // AI Enemy ships
 const enemyShips = [
-    { name: '🛶 Pirate Boat', health: 45, damage: 5, speed: 2.2, points: 20, color: '#5a3a1a', size: 13 },
-    { name: '⛵ Pirate Sloop', health: 90, damage: 9, speed: 2.0, points: 40, color: '#8B4513', size: 17 },
-    { name: '🚤 Pirate Brig', health: 160, damage: 14, speed: 1.8, points: 65, color: '#A0522D', size: 21 },
-    { name: '⚓ Pirate Frigate', health: 260, damage: 20, speed: 1.6, points: 100, color: '#8B0000', size: 25 },
-    { name: '🏴‍☠️ Pirate Galleon', health: 400, damage: 28, speed: 1.4, points: 160, color: '#4a0000', size: 30 },
-    { name: '💀 Ghost Ship', health: 600, damage: 35, speed: 1.8, points: 250, color: '#6699cc', size: 35, rare: true }
+    { name: '🛶 Pirate Boat', health: 45, damage: 5, speed: 2.2, points: 20, color: '#5a3a1a', size: 15 },
+    { name: '⛵ Pirate Sloop', health: 90, damage: 9, speed: 2.0, points: 40, color: '#8B4513', size: 19 },
+    { name: '🚤 Pirate Brig', health: 160, damage: 14, speed: 1.8, points: 65, color: '#A0522D', size: 23 },
+    { name: '⚓ Pirate Frigate', health: 260, damage: 20, speed: 1.6, points: 100, color: '#8B0000', size: 27 },
+    { name: '🏴‍☠️ Pirate Galleon', health: 400, damage: 28, speed: 1.4, points: 160, color: '#4a0000', size: 32 },
+    { name: '💀 Ghost Ship', health: 600, damage: 35, speed: 1.8, points: 250, color: '#6699cc', size: 37, rare: true }
 ];
 
 // Supply crates
@@ -114,12 +101,7 @@ function spawnSupplyCrate() {
 }
 
 function spawnEnemy() {
-    let availableEnemies = [...enemyShips];
-    // Rare ghost ship (5% chance)
-    if (Math.random() < 0.05) {
-        availableEnemies.push(enemyShips[enemyShips.length - 1]);
-    }
-    const type = availableEnemies[Math.floor(Math.random() * availableEnemies.length)];
+    const type = enemyShips[Math.floor(Math.random() * enemyShips.length)];
     const side = Math.floor(Math.random() * 4);
     let x, y;
     switch(side) {
@@ -182,7 +164,7 @@ function getShipById(shipId) {
     return ships[shipId] || ships.rowboat;
 }
 
-// Keep enemies on map
+// Enemy spawn interval
 setInterval(() => {
     if (enemies.length < 5) {
         spawnEnemy();
@@ -191,12 +173,12 @@ setInterval(() => {
     }
 }, 8000);
 
-// Spawn crates every 20 seconds
+// Crate spawn interval
 setInterval(() => {
     spawnSupplyCrate();
 }, 20000);
 
-// Initial spawn
+// Initial spawns
 for (let i = 0; i < 5; i++) {
     spawnEnemy();
 }
@@ -215,11 +197,9 @@ setInterval(() => {
             
             if (isInStation && !wasInStation) {
                 playersInStation[id] = station.id;
-                io.emit('stationEnter', { playerId: id, stationId: station.id });
                 io.emit('chatMessage', { username: 'System', message: `⛽ ${player.username} entered a petrol station! +${station.pointsPerSecond} pts/sec`, isSystem: true });
             } else if (!isInStation && wasInStation) {
                 delete playersInStation[id];
-                io.emit('stationLeave', { playerId: id, stationId: station.id });
             }
         }
     }
@@ -250,7 +230,6 @@ setInterval(() => {
                 io.emit('scoreUpdate', { id: id, score: player.score, level: player.level });
             } else {
                 delete playersInStation[id];
-                io.emit('stationLeave', { playerId: id, stationId: station.id });
             }
         }
     }
@@ -270,7 +249,7 @@ setInterval(() => {
                 if (newLevel > player.level) {
                     player.level = newLevel;
                     io.emit('playerUpdate', { id: id, level: newLevel });
-                    io.emit('chatMessage', { username: 'System', message: `🎉 ${player.username} reached Level ${newLevel}! New ships available! 🎉`, isSystem: true });
+                    io.emit('chatMessage', { username: 'System', message: `🎉 ${player.username} reached Level ${newLevel}!`, isSystem: true });
                     io.to(id).emit('availableShips', getAvailableShips(newLevel));
                 }
                 
@@ -359,6 +338,10 @@ setInterval(() => {
                 p1.y += Math.sin(angle) * 15;
                 p2.x -= Math.cos(angle) * 15;
                 p2.y -= Math.sin(angle) * 15;
+                p1.x = Math.min(Math.max(p1.x, 10), MAP_WIDTH - 10);
+                p1.y = Math.min(Math.max(p1.y, 10), MAP_HEIGHT - 10);
+                p2.x = Math.min(Math.max(p2.x, 10), MAP_WIDTH - 10);
+                p2.y = Math.min(Math.max(p2.y, 10), MAP_HEIGHT - 10);
                 io.emit('playerMoved', { id: playerIds[i], x: p1.x, y: p1.y });
                 io.emit('playerMoved', { id: playerIds[j], x: p2.x, y: p2.y });
             }
@@ -373,7 +356,6 @@ io.on('connection', (socket) => {
         const username = data.username;
         const shipId = data.shipId || 'rowboat';
         const ship = getShipById(shipId);
-        const level = 0;
         
         players[socket.id] = {
             id: socket.id,
@@ -384,14 +366,14 @@ io.on('connection', (socket) => {
             health: ship.health,
             maxHealth: ship.health,
             score: 0,
-            level: level,
+            level: 0,
             damage: ship.damage,
             fireRate: ship.fireRate,
             speed: ship.speed,
             lastShot: 0,
             shipId: shipId,
             shipName: ship.name,
-            shipColor: ship.color,
+            color: ship.color,
             era: ship.era,
             kills: 0,
             isAdmin: username === ADMIN_NAME
@@ -404,7 +386,7 @@ io.on('connection', (socket) => {
         socket.emit('availableShips', getAvailableShips(0));
         socket.broadcast.emit('newPlayer', players[socket.id]);
         
-        console.log(`${username} joined with ${ship.name} (${ship.era})`);
+        console.log(`${username} joined with ${ship.name}`);
     });
     
     socket.on('changeShip', (data) => {
@@ -422,7 +404,7 @@ io.on('connection', (socket) => {
         player.health = ship.health;
         player.size = ship.size;
         player.shipName = ship.name;
-        player.shipColor = ship.color;
+        player.color = ship.color;
         player.era = ship.era;
         
         io.emit('playerUpdate', {
@@ -433,11 +415,11 @@ io.on('connection', (socket) => {
             maxHealth: player.maxHealth,
             health: player.health,
             size: player.size,
-            color: player.shipColor,
+            color: player.color,
             shipName: player.shipName,
             era: player.era
         });
-        socket.emit('chatMessage', { username: 'System', message: `Changed to ${ship.name} (${ship.era})!`, isSystem: true });
+        socket.emit('chatMessage', { username: 'System', message: `Changed to ${ship.name}!`, isSystem: true });
     });
     
     socket.on('playerMovement', (data) => {
@@ -469,7 +451,8 @@ io.on('connection', (socket) => {
             endX: endX,
             endY: endY,
             ownerId: socket.id,
-            damage: player.damage
+            damage: player.damage,
+            startTime: Date.now()
         };
         
         io.emit('projectileShot', projectile);
@@ -490,14 +473,13 @@ io.on('connection', (socket) => {
                         if (newLevel > player.level) {
                             player.level = newLevel;
                             io.emit('playerUpdate', { id: socket.id, level: newLevel });
-                            io.emit('chatMessage', { username: 'System', message: `🎉 ${player.username} reached Level ${newLevel}! New ships available! 🎉`, isSystem: true });
+                            io.emit('chatMessage', { username: 'System', message: `🎉 ${player.username} reached Level ${newLevel}!`, isSystem: true });
                             socket.emit('availableShips', getAvailableShips(newLevel));
                         }
                         
                         io.emit('scoreUpdate', { id: socket.id, score: player.score, kills: player.kills, level: player.level });
                         io.emit('enemyDestroyed', enemy.id);
                         enemies.splice(i, 1);
-                        i--;
                         io.emit('chatMessage', { username: 'System', message: `💥 ${player.username} sank a ${enemy.name}! +${enemy.points} points!`, isSystem: true });
                     } else {
                         io.emit('enemyDamaged', { id: enemy.id, health: enemy.health });
@@ -506,7 +488,7 @@ io.on('connection', (socket) => {
                 }
             }
             
-            // Hit other players (PvP)
+            // Hit other players
             for (const id in players) {
                 if (id === socket.id) continue;
                 const target = players[id];
@@ -545,10 +527,7 @@ io.on('connection', (socket) => {
     socket.on('chatMessage', (data) => {
         const player = players[socket.id];
         if (!player) return;
-        let message = data.message;
-        // Simple emojis
-        message = message.replace(/:\)/g, '😊').replace(/:\(/g, '😢').replace(/:D/g, '😁');
-        io.emit('chatMessage', { username: player.username, message: message });
+        io.emit('chatMessage', { username: player.username, message: data.message });
     });
     
     socket.on('disconnect', () => {
@@ -561,12 +540,10 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n⚓ NAVAL.IO - REALISTIC SHIPS`);
+    console.log(`\n⚓ NAVAL.IO - REAL WARSHIP BATTLE`);
     console.log(`📍 Port: ${PORT}`);
     console.log(`🗺️ Map: ${MAP_WIDTH}x${MAP_HEIGHT}`);
-    console.log(`🚢 Ships: 21 classes (Rowboat → Annihilator)`);
-    console.log(`📜 Eras: Age of Sail → WWII → Modern → Future`);
+    console.log(`🚢 Ships: 21 classes available`);
     console.log(`⛽ Petrol stations: 7 locations`);
-    console.log(`📦 Supply crates: Spawn every 20 seconds`);
-    console.log(`👑 Admin: ${ADMIN_NAME}\n`);
+    console.log(`✨ Ready for connection!\n`);
 });
