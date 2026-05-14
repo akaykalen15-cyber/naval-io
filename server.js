@@ -2,27 +2,53 @@ const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-// FIXED: Serve files from current directory (not public folder)
 app.use(express.static(__dirname));
 
 let players = {};
 let zombies = {};
 let wave = 1;
 let zombieIdCounter = 0;
+let allTimeTop10 = [];
+
+const LEADERBOARD_FILE = path.join(__dirname, 'zombie_leaderboard.json');
+
+if (fs.existsSync(LEADERBOARD_FILE)) {
+    try {
+        allTimeTop10 = JSON.parse(fs.readFileSync(LEADERBOARD_FILE, 'utf8'));
+    } catch(e) { allTimeTop10 = []; }
+}
+
+function saveLeaderboard() {
+    fs.writeFileSync(LEADERBOARD_FILE, JSON.stringify(allTimeTop10, null, 2));
+}
+
+function updateLeaderboard(username, score) {
+    const existing = allTimeTop10.find(p => p.username === username);
+    if (existing) {
+        if (score > existing.score) existing.score = score;
+    } else {
+        allTimeTop10.push({ username: username, score: score });
+    }
+    allTimeTop10.sort((a, b) => b.score - a.score);
+    allTimeTop10 = allTimeTop10.slice(0, 10);
+    saveLeaderboard();
+    io.emit('leaderboardUpdate', allTimeTop10);
+}
 
 const MAP_WIDTH = 3000;
 const MAP_HEIGHT = 3000;
 
 const zombieTypes = {
-    regular: { health: 1, speed: 1.5, points: 10, color: '#2d5a27', size: 20 },
-    fast: { health: 1, speed: 3.0, points: 15, color: '#6b8c42', size: 18 },
-    tank: { health: 5, speed: 0.8, points: 50, color: '#1a3a1a', size: 30 },
-    boss: { health: 20, speed: 1.0, points: 500, color: '#8b0000', size: 50 }
+    regular: { health: 1, speed: 1.5, points: 10, color: '#2d5a27', size: 20, headshotBonus: 5 },
+    fast: { health: 1, speed: 3.0, points: 15, color: '#6b8c42', size: 18, headshotBonus: 8 },
+    tank: { health: 5, speed: 0.8, points: 50, color: '#1a3a1a', size: 30, headshotBonus: 25 },
+    boss: { health: 20, speed: 1.0, points: 500, color: '#8b0000', size: 50, headshotBonus: 250 }
 };
 
 function getRandomSpawnPosition() {
@@ -44,6 +70,7 @@ function spawnZombies() {
         
         if (wave >= 3 && roll < 0.2) type = 'fast';
         else if (wave >= 5 && roll < 0.1) type = 'tank';
+        else if (wave >= 10 && roll < 0.05) type = 'boss';
         
         const pos = getRandomSpawnPosition();
         const zombieId = 'zombie_' + zombieIdCounter++;
@@ -66,7 +93,12 @@ function spawnZombies() {
 function checkWaveComplete() {
     if (Object.keys(zombies).length === 0) {
         wave++;
-        io.emit('chatMessage', { username: 'System', message: `🎉 WAVE ${wave} COMPLETE! 🎉`, isSystem: true });
+        // Bonus coins for completing wave
+        for (const id in players) {
+            players[id].score += wave * 10;
+            io.emit('scoreUpdate', { id: id, score: players[id].score });
+        }
+        io.emit('chatMessage', { username: 'System', message: `🎉 WAVE ${wave} COMPLETE! +${wave * 10} bonus points! 🎉`, isSystem: true });
         spawnZombies();
     }
 }
@@ -74,7 +106,6 @@ function checkWaveComplete() {
 setInterval(() => {
     for (const id in zombies) {
         const zombie = zombies[id];
-        
         let nearestPlayer = null;
         let nearestDist = Infinity;
         for (const pid in players) {
@@ -113,6 +144,7 @@ setInterval(() => {
                 io.emit('playerUpdate', { id: playerId, health: player.health });
                 
                 if (player.health <= 0) {
+                    player.streak = 0;
                     player.health = 100;
                     player.score = Math.max(0, player.score - Math.floor(player.score * 0.2));
                     player.x = MAP_WIDTH / 2;
@@ -128,6 +160,7 @@ setInterval(() => {
 
 io.on('connection', (socket) => {
     console.log('Player connected:', socket.id);
+    socket.emit('leaderboardUpdate', allTimeTop10);
 
     socket.on('joinGame', (data) => {
         const username = data.username;
@@ -142,11 +175,15 @@ io.on('connection', (socket) => {
             health: 100,
             maxHealth: 100,
             score: 0,
+            coins: 0,
             damage: 1,
             fireRate: 300,
             speed: 3,
+            streak: 0,
             lastShot: 0,
-            skin: skin
+            skin: skin,
+            kills: 0,
+            headshots: 0
         };
         
         socket.emit('currentPlayers', players);
@@ -175,6 +212,8 @@ io.on('connection', (socket) => {
         player.lastShot = now;
         
         const angle = data.angle;
+        const isHeadshot = data.isHeadshot || false;
+        
         const bullet = {
             id: Math.random().toString(36).substr(2, 8),
             x: player.x,
@@ -182,8 +221,7 @@ io.on('connection', (socket) => {
             angle: angle,
             ownerId: socket.id,
             damage: player.damage,
-            range: 500,
-            traveled: 0
+            isHeadshot: isHeadshot
         };
         
         io.emit('bulletShot', bullet);
@@ -194,13 +232,41 @@ io.on('connection', (socket) => {
                 const dx = bullet.x - zombie.x;
                 const dy = bullet.y - zombie.y;
                 if (Math.hypot(dx, dy) < zombie.size) {
-                    zombie.health -= bullet.damage;
+                    let damage = bullet.damage;
+                    let headshotBonus = 0;
+                    
+                    if (bullet.isHeadshot) {
+                        damage *= 2;
+                        headshotBonus = zombie.headshotBonus;
+                        player.headshots++;
+                        io.emit('chatMessage', { username: 'System', message: `🎯 HEADSHOT! +${headshotBonus} bonus!`, isSystem: true });
+                    }
+                    
+                    zombie.health -= damage;
                     if (zombie.health <= 0) {
-                        player.score += zombie.points;
+                        const totalPoints = zombie.points + headshotBonus;
+                        player.score += totalPoints;
+                        player.coins += Math.floor(totalPoints / 10);
+                        player.kills++;
+                        player.streak++;
+                        
+                        // Streak bonuses
+                        if (player.streak === 5) {
+                            player.coins += 50;
+                            io.emit('chatMessage', { username: 'System', message: `🔥 ${player.username} is on a 5 KILL STREAK! +50 coins!`, isSystem: true });
+                        } else if (player.streak === 10) {
+                            player.coins += 100;
+                            io.emit('chatMessage', { username: 'System', message: `⚡ ${player.username} is UNSTOPPABLE! +100 coins!`, isSystem: true });
+                        } else if (player.streak === 20) {
+                            player.coins += 500;
+                            io.emit('chatMessage', { username: 'System', message: `👑 ${player.username} is GODLIKE! +500 coins!`, isSystem: true });
+                        }
+                        
                         delete zombies[zombieId];
                         io.emit('zombieKilled', zombieId);
-                        io.emit('scoreUpdate', { id: socket.id, score: player.score });
-                        io.emit('chatMessage', { username: 'System', message: `${player.username} killed a ${zombie.type} zombie! +${zombie.points} points`, isSystem: true });
+                        io.emit('scoreUpdate', { id: socket.id, score: player.score, coins: player.coins, kills: player.kills, headshots: player.headshots, streak: player.streak });
+                        io.emit('chatMessage', { username: 'System', message: `${player.username} killed a ${zombie.type} zombie! +${totalPoints} points`, isSystem: true });
+                        updateLeaderboard(player.username, player.score);
                         checkWaveComplete();
                     } else {
                         io.emit('zombieDamaged', { id: zombieId, health: zombie.health });
@@ -216,9 +282,9 @@ io.on('connection', (socket) => {
         if (!player) return;
         
         const cost = 100;
-        if (player.score < cost) return;
+        if (player.coins < cost) return;
         
-        player.score -= cost;
+        player.coins -= cost;
         
         switch(type) {
             case 'damage':
@@ -236,15 +302,56 @@ io.on('connection', (socket) => {
                 break;
         }
         
-        io.emit('scoreUpdate', { id: socket.id, score: player.score });
+        io.emit('scoreUpdate', { id: socket.id, score: player.score, coins: player.coins });
         io.emit('playerUpdate', { id: socket.id, health: player.health, maxHealth: player.maxHealth, damage: player.damage, fireRate: player.fireRate, speed: player.speed });
         socket.emit('chatMessage', { username: 'System', message: `Upgraded ${type}!`, isSystem: true });
+    });
+    
+    socket.on('buySkin', (skinId) => {
+        const player = players[socket.id];
+        if (!player) return;
+        
+        const skinPrices = {
+            classic: 0, military: 500, ninja: 1000, zombie: 2000, angel: 5000, demon: 10000
+        };
+        
+        const price = skinPrices[skinId];
+        if (!price) return;
+        if (player.coins < price) return;
+        
+        player.coins -= price;
+        player.skin = skinId;
+        io.emit('scoreUpdate', { id: socket.id, coins: player.coins });
+        socket.emit('skinUnlocked', skinId);
+        socket.emit('chatMessage', { username: 'System', message: `Purchased ${skinId} skin!`, isSystem: true });
+    });
+    
+    socket.on('dailyReward', () => {
+        const player = players[socket.id];
+        if (!player) return;
+        
+        const today = new Date().toDateString();
+        if (player.lastDaily === today) {
+            socket.emit('chatMessage', { username: 'System', message: 'Already claimed today! Come back tomorrow.', isSystem: true });
+            return;
+        }
+        
+        player.lastDaily = today;
+        player.coins += 500;
+        io.emit('scoreUpdate', { id: socket.id, coins: player.coins });
+        socket.emit('chatMessage', { username: 'System', message: '🎁 Daily reward: 500 coins!', isSystem: true });
     });
     
     socket.on('chatMessage', (data) => {
         const player = players[socket.id];
         if (!player) return;
-        io.emit('chatMessage', { username: player.username, message: data.message, isAdmin: false });
+        
+        // Emoji shortcuts
+        let message = data.message;
+        message = message.replace(/:\)/g, '😊').replace(/:\(/g, '😢').replace(/:D/g, '😁').replace(/:P/g, '😛');
+        message = message.replace(/zombie/gi, '🧟').replace(/gun/gi, '🔫').replace(/boss/gi, '👑');
+        
+        io.emit('chatMessage', { username: player.username, message: message, isAdmin: false });
     });
     
     socket.on('disconnect', () => {
@@ -259,6 +366,8 @@ spawnZombies();
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Zombie.io server running on port ${PORT}`);
+    console.log(`✅ Zombie.io COMPLETE server running on port ${PORT}`);
     console.log(`🧟 Wave 1 started!`);
+    console.log(`🎯 Headshots enabled!`);
+    console.log(`💰 Coin system active!`);
 });
