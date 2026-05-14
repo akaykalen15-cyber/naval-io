@@ -1,16 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Zombie.io - Zoom</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Naval.io - Sea Warfare</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         body {
             background: #0a0f1e;
             display: flex;
@@ -26,20 +19,12 @@
             border-radius: 24px;
             text-align: center;
             width: 90%;
-            max-width: 900px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        #gameScreen {
-            background: #111827;
-            padding: 0;
-            border-radius: 16px;
+            max-width: 500px;
         }
         #joinScreen h1 {
-            color: #fbbf24;
-            margin-bottom: 25px;
-            font-size: 48px;
-            text-shadow: 0 0 10px #fbbf24;
+            color: #00bcd4;
+            margin-bottom: 20px;
+            font-size: 42px;
         }
         #joinScreen input {
             background: #1f2937;
@@ -52,11 +37,19 @@
             margin-bottom: 15px;
             outline: none;
         }
-        #joinScreen input:focus {
-            border-color: #fbbf24;
+        #joinScreen select {
+            background: #1f2937;
+            border: 1px solid #374151;
+            color: white;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 15px;
+            cursor: pointer;
         }
         #joinBtn {
-            background: #3b82f6;
+            background: #00bcd4;
             border: none;
             color: white;
             padding: 14px 20px;
@@ -65,128 +58,25 @@
             cursor: pointer;
             width: 100%;
             font-weight: bold;
-            margin-bottom: 10px;
         }
         #joinBtn:hover {
-            background: #2563eb;
+            background: #0097a7;
         }
-        .daily-btn {
-            background: #fbbf24;
-            color: #1f2937;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        .daily-btn:hover {
-            background: #f59e0b;
-        }
-        .stats-container {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            margin: 20px 0;
-            flex-wrap: wrap;
-        }
-        .coin-display {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            border-radius: 40px;
-            padding: 12px 25px;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: bold;
-            color: #1f2937;
-            font-size: 20px;
-        }
-        .leaderboard-container {
+        .errorMsg { color: #ef4444; margin-top: 10px; font-size: 14px; }
+        .level-info {
             background: #1f2937;
-            border-radius: 16px;
-            padding: 15px;
-            margin: 15px 0;
-            border: 1px solid #374151;
-        }
-        .leaderboard-container h3 {
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 15px;
             color: #fbbf24;
-            font-size: 18px;
-            margin-bottom: 12px;
-        }
-        .leaderboard-list {
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .leaderboard-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 12px;
-            border-bottom: 1px solid #374151;
             font-size: 14px;
-            color: white;
         }
-        .leaderboard-item.top-1 { color: #ffd700; font-weight: bold; font-size: 16px; }
-        .leaderboard-item.top-2 { color: #c0c0c0; }
-        .leaderboard-item.top-3 { color: #cd7f32; }
-        .skin-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin: 15px 0;
-            max-height: 250px;
-            overflow-y: auto;
+        #gameScreen {
+            background: #111827;
+            padding: 0;
+            border-radius: 16px;
         }
-        .skin-card {
-            background: #1f2937;
-            border-radius: 12px;
-            padding: 12px;
-            text-align: center;
-            border: 2px solid #374151;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .skin-card:hover {
-            transform: translateY(-3px);
-        }
-        .skin-card.owned {
-            border-color: #fbbf24;
-            background: #2d3a4e;
-        }
-        .skin-card.equipped {
-            border-color: #3b82f6;
-            background: #1e3a5f;
-        }
-        .skin-preview {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            margin: 0 auto 8px;
-        }
-        .skin-name {
-            font-size: 12px;
-            color: white;
-            font-weight: bold;
-        }
-        .skin-price {
-            font-size: 11px;
-            color: #fbbf24;
-            margin-top: 4px;
-        }
-        .errorMsg {
-            color: #ef4444;
-            margin-top: 10px;
-            font-size: 12px;
-        }
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1f2937;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #fbbf24;
-            border-radius: 4px;
-        }
-        #gameContainer {
-            position: relative;
-        }
+        #gameContainer { position: relative; }
         canvas {
             border: 2px solid #1f2937;
             display: block;
@@ -205,7 +95,7 @@
             z-index: 10;
             pointer-events: none;
         }
-        .stats, #waveInfo, #upgradePanel, #zoomControl {
+        .stats {
             pointer-events: auto;
             background: rgba(0,0,0,0.8);
             backdrop-filter: blur(5px);
@@ -214,42 +104,6 @@
             color: white;
             font-size: 14px;
             border: 1px solid #374151;
-        }
-        #zoomControl {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        #zoomControl button {
-            background: #3b82f6;
-            border: none;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        #zoomLevel {
-            min-width: 50px;
-            text-align: center;
-        }
-        #upgradePanel {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .upgrade-btn {
-            background: #3b82f6;
-            border: none;
-            color: white;
-            padding: 6px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            pointer-events: auto;
-        }
-        .upgrade-btn:hover {
-            background: #2563eb;
         }
         .health-bar {
             width: 100px;
@@ -271,7 +125,7 @@
             position: absolute;
             bottom: 10px;
             left: 10px;
-            width: 300px;
+            width: 280px;
             background: rgba(0,0,0,0.85);
             border-radius: 8px;
             border: 1px solid #374151;
@@ -286,8 +140,8 @@
         }
         #chatInputArea {
             display: flex;
-            padding: 6px;
-            gap: 6px;
+            padding: 5px;
+            gap: 5px;
             border-top: 1px solid #374151;
         }
         #chatInput {
@@ -295,26 +149,21 @@
             background: #1f2937;
             border: 1px solid #374151;
             color: white;
-            padding: 6px 8px;
+            padding: 5px 8px;
             border-radius: 6px;
             outline: none;
             font-size: 11px;
         }
         #chatSend {
-            background: #3b82f6;
+            background: #00bcd4;
             border: none;
             color: white;
-            padding: 6px 12px;
+            padding: 5px 10px;
             border-radius: 6px;
             cursor: pointer;
         }
-        .chat-system {
-            color: #ef4444;
-            font-style: italic;
-        }
-        .hidden {
-            display: none;
-        }
+        .chat-system { color: #ef4444; font-style: italic; }
+        .hidden { display: none; }
         .controls-hint {
             position: absolute;
             bottom: 10px;
@@ -322,46 +171,59 @@
             background: rgba(0,0,0,0.5);
             padding: 4px 8px;
             border-radius: 4px;
-            font-size: 9px;
+            font-size: 10px;
             color: #888;
             pointer-events: none;
         }
-        @keyframes float {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-50px); opacity: 0; }
+        #shipSelectPanel {
+            position: absolute;
+            bottom: 100px;
+            right: 10px;
+            background: rgba(0,0,0,0.9);
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px solid #00bcd4;
+            z-index: 20;
+            min-width: 180px;
         }
-        .floating-text {
-            position: fixed;
-            pointer-events: none;
-            font-weight: bold;
-            z-index: 1000;
-            animation: float 1s ease-out forwards;
-            font-size: 24px;
-            text-shadow: 0 0 3px black;
+        #shipSelectPanel h4 {
+            color: #00bcd4;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        .ship-option {
+            background: #1f2937;
+            padding: 6px 10px;
+            margin: 5px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+        .ship-option:hover {
+            background: #374151;
+            transform: scale(1.02);
+        }
+        .ship-option.selected {
+            border: 1px solid #00bcd4;
+            background: #00bcd4;
+            color: #1f2937;
+        }
+        .ship-option.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
 <div id="joinScreen">
-    <h1>🧟 ZOMBIE.io</h1>
-    <input type="text" id="usernameInput" placeholder="Enter username" maxlength="20">
-    <button id="joinBtn">🔫 JOIN GAME</button>
-    <button id="dailyBtn" class="daily-btn">🎁 DAILY REWARD (500 coins)</button>
-    
-    <div class="stats-container">
-        <div class="coin-display">🪙 <span id="coinAmount">0</span> coins</div>
-    </div>
-    
-    <div class="leaderboard-container">
-        <h3>🏆 TOP 10 SURVIVORS 🏆</h3>
-        <div id="leaderboardList" class="leaderboard-list"></div>
-    </div>
-    
-    <div class="leaderboard-container">
-        <h3>🎨 SKIN SHOP</h3>
-        <div class="skin-grid" id="skinGrid"></div>
-    </div>
-    
+    <h1>⚓ NAVAL.io</h1>
+    <input type="text" id="usernameInput" placeholder="Enter captain name">
+    <select id="shipSelect">
+        <option value="rowboat">🛶 Rowboat (Level 0)</option>
+    </select>
+    <button id="joinBtn">Set Sail ⚓</button>
+    <div class="level-info">⚡ Level up by earning points! New ships unlock every level.</div>
     <div id="errorMsg" class="errorMsg"></div>
 </div>
 
@@ -371,79 +233,59 @@
         
         <div id="ui">
             <div class="stats">🎯 Score: <span id="scoreValue">0</span></div>
-            <div class="stats">🪙 <span id="coinGameValue">0</span></div>
+            <div class="stats">⚓ Level: <span id="levelValue">0</span></div>
             <div class="stats">❤️ <span id="healthValue">100</span><div class="health-bar"><div id="healthFill" class="health-fill"></div></div></div>
-            <div class="stats">🔥 <span id="streakValue">0</span></div>
-            <div id="waveInfo">🧟 Wave <span id="waveValue">1</span></div>
-            <div id="zoomControl">
-                <button id="zoomOutBtn">-</button>
-                <span id="zoomLevel">100%</span>
-                <button id="zoomInBtn">+</button>
-                <button id="zoomResetBtn">Reset</button>
-            </div>
-            <div id="upgradePanel">
-                <button class="upgrade-btn" data-upgrade="damage">💪 Damage (<span id="damageLevel">1</span>)</button>
-                <button class="upgrade-btn" data-upgrade="fireRate">⚡ Rate (<span id="fireRateLevel">1</span>)</button>
-                <button class="upgrade-btn" data-upgrade="speed">🏃 Speed (<span id="speedLevel">1</span>)</button>
-                <button class="upgrade-btn" data-upgrade="health">❤️ HP (<span id="healthLevel">1</span>)</button>
-            </div>
+            <div class="stats">⚔️ Kills: <span id="killsValue">0</span></div>
+        </div>
+        
+        <div id="shipSelectPanel">
+            <h4>🚢 SELECT SHIP</h4>
+            <div id="shipList"></div>
         </div>
         
         <div id="chatOverlay">
             <div id="chatMessages"></div>
             <div id="chatInputArea">
-                <input type="text" id="chatInput" placeholder="Type :) for emojis..." maxlength="100">
+                <input type="text" id="chatInput" placeholder="Type a message..." maxlength="100">
                 <button id="chatSend">Send</button>
             </div>
         </div>
-        <div class="controls-hint">WASD/Arrows | 🖱️ Aim | Click Shoot | 🔍 Scroll Zoom</div>
+        <div class="controls-hint">WASD/Arrows | 🖱️ Aim | Click Shoot | ⛽ Stand in green circles for points</div>
     </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    const socket = io({ reconnection: true, reconnectionAttempts: 5 });
+    const socket = io();
     
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
     let players = {};
-    let zombies = {};
+    let enemies = [];
+    let crates = [];
+    let petrolStations = [];
     let myId = null;
     let myPlayer = null;
     let currentScore = 0;
-    let currentCoins = 0;
     let currentHealth = 100;
-    let currentWave = 1;
-    let currentStreak = 0;
+    let currentLevel = 0;
+    let currentKills = 0;
     let bullets = [];
+    let availableShips = [];
+    let selectedShipId = 'rowboat';
     
     let cameraX = 0, cameraY = 0;
     let mouseX = 0, mouseY = 0;
     let isShooting = false;
     let lastShotTime = 0;
-    let fireRate = 300;
+    let fireRate = 700;
+    let shipDamage = 8;
+    let shipSpeed = 5;
+    let shipSize = 14;
     
-    // ZOOM SETTINGS
-    let zoom = 1.0;
-    const MIN_ZOOM = 0.3;
-    const MAX_ZOOM = 2.5;
-    
-    let upgrades = { damage: 1, fireRateLevel: 1, speed: 3, healthLevel: 1 };
-    let ownedSkins = ['classic'];
-    let equippedSkin = 'classic';
-    
-    const MAP_WIDTH = 5000;
-    const MAP_HEIGHT = 5000;
-    
-    const SKINS = {
-        classic: { name: 'Classic', color: '#3b82f6', price: 0 },
-        military: { name: 'Military', color: '#228B22', price: 500 },
-        ninja: { name: 'Ninja', color: '#2c2c2c', price: 1000 },
-        zombie: { name: 'Zombie', color: '#2d5a27', price: 2000 },
-        angel: { name: 'Angel', color: '#ffffff', price: 5000 },
-        demon: { name: 'Demon', color: '#8b0000', price: 10000 }
-    };
+    const MAP_WIDTH = 6000;
+    const MAP_HEIGHT = 6000;
     
     const keys = { w: false, s: false, a: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
     
@@ -451,56 +293,22 @@
     const joinScreen = document.getElementById('joinScreen');
     const gameScreen = document.getElementById('gameScreen');
     const usernameInput = document.getElementById('usernameInput');
+    const shipSelect = document.getElementById('shipSelect');
     const joinBtn = document.getElementById('joinBtn');
-    const dailyBtn = document.getElementById('dailyBtn');
     const errorMsg = document.getElementById('errorMsg');
     const scoreElement = document.getElementById('scoreValue');
-    const coinGameValue = document.getElementById('coinGameValue');
-    const coinAmount = document.getElementById('coinAmount');
+    const levelElement = document.getElementById('levelValue');
     const healthValue = document.getElementById('healthValue');
     const healthFill = document.getElementById('healthFill');
-    const waveValue = document.getElementById('waveValue');
-    const streakValue = document.getElementById('streakValue');
-    const damageLevelSpan = document.getElementById('damageLevel');
-    const fireRateLevelSpan = document.getElementById('fireRateLevel');
-    const speedLevelSpan = document.getElementById('speedLevel');
-    const healthLevelSpan = document.getElementById('healthLevel');
+    const killsElement = document.getElementById('killsValue');
+    const shipList = document.getElementById('shipList');
     const chatMessages = document.getElementById('chatMessages');
     const chatInput = document.getElementById('chatInput');
     const chatSend = document.getElementById('chatSend');
-    const leaderboardList = document.getElementById('leaderboardList');
-    const skinGrid = document.getElementById('skinGrid');
-    const zoomLevelSpan = document.getElementById('zoomLevel');
     
     function formatNumber(n) {
-        if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
-        if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
+        if (n >= 10000) return (n / 1000).toFixed(1) + 'K';
         return n.toString();
-    }
-    
-    function setZoom(newZoom) {
-        zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, newZoom));
-        zoomLevelSpan.innerText = `${Math.round(zoom * 100)}%`;
-    }
-    
-    document.getElementById('zoomInBtn').onclick = () => setZoom(zoom + 0.1);
-    document.getElementById('zoomOutBtn').onclick = () => setZoom(zoom - 0.1);
-    document.getElementById('zoomResetBtn').onclick = () => setZoom(1.0);
-    
-    canvas.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        setZoom(e.deltaY < 0 ? zoom + 0.1 : zoom - 0.1);
-    });
-    
-    function showFloatingText(text, color, x, y) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        div.className = 'floating-text';
-        div.style.left = x + 'px';
-        div.style.top = y + 'px';
-        div.style.color = color;
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 1000);
     }
     
     function addChatMessage(sender, message, isSystem = false) {
@@ -526,54 +334,24 @@
     chatSend.onclick = sendChat;
     chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChat(); });
     
-    function renderSkinShop() {
-        if (!skinGrid) return;
-        skinGrid.innerHTML = '';
-        for (const [id, skin] of Object.entries(SKINS)) {
-            const owned = ownedSkins.includes(id);
-            const equipped = equippedSkin === id;
-            const card = document.createElement('div');
-            card.className = `skin-card ${owned ? 'owned' : ''} ${equipped ? 'equipped' : ''}`;
-            card.innerHTML = `
-                <div class="skin-preview" style="background: ${skin.color}; border-radius: 50%;"></div>
-                <div class="skin-name">${skin.name}</div>
-                <div class="skin-price">${owned ? (equipped ? '✅' : 'OWNED') : `🪙 ${formatNumber(skin.price)}`}</div>
-            `;
-            if (!owned) {
-                card.onclick = () => {
-                    if (currentCoins >= skin.price) {
-                        socket.emit('buySkin', id);
-                    } else {
-                        addChatMessage('System', `Not enough coins! Need ${formatNumber(skin.price)} coins`, true);
+    function updateShipList() {
+        if (!shipList) return;
+        shipList.innerHTML = '';
+        for (const ship of availableShips) {
+            const div = document.createElement('div');
+            div.className = `ship-option ${selectedShipId === ship.id ? 'selected' : ''}`;
+            div.innerHTML = `${ship.name} (Lvl ${ship.level})`;
+            div.onclick = () => {
+                if (ship.level <= currentLevel) {
+                    selectedShipId = ship.id;
+                    updateShipList();
+                    if (myPlayer) {
+                        socket.emit('changeShip', { shipId: selectedShipId });
                     }
-                };
-            } else if (!equipped) {
-                card.onclick = () => {
-                    equippedSkin = id;
-                    localStorage.setItem('zombieSkin', id);
-                    renderSkinShop();
-                    addChatMessage('System', `${skin.name} equipped!`, true);
-                };
-            }
-            skinGrid.appendChild(card);
+                }
+            };
+            shipList.appendChild(div);
         }
-    }
-    
-    function updateLeaderboardDisplay(leaderboard) {
-        if (!leaderboardList) return;
-        let html = '';
-        for (let i = 0; i < leaderboard.length; i++) {
-            const p = leaderboard[i];
-            let className = '';
-            if (i === 0) className = 'top-1';
-            else if (i === 1) className = 'top-2';
-            else if (i === 2) className = 'top-3';
-            html += `<div class="leaderboard-item ${className}">
-                <span>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`} ${p.username}</span>
-                <span>${formatNumber(p.score)} pts</span>
-            </div>`;
-        }
-        leaderboardList.innerHTML = html;
     }
     
     joinBtn.onclick = () => {
@@ -586,7 +364,7 @@
         joinScreen.classList.add('hidden');
         gameScreen.classList.remove('hidden');
         
-        socket.emit('joinGame', { username: username });
+        socket.emit('joinGame', { username: username, shipId: selectedShipId });
         
         function gameLoop() {
             if (myPlayer) {
@@ -605,12 +383,7 @@
         }, 50);
     };
     
-    dailyBtn.onclick = () => {
-        socket.emit('dailyReward');
-    };
-    
     socket.on('connect', () => console.log('Connected'));
-    socket.on('leaderboardUpdate', (leaderboard) => updateLeaderboardDisplay(leaderboard));
     
     socket.on('currentPlayers', (serverPlayers) => {
         players = serverPlayers;
@@ -619,64 +392,91 @@
                 myId = id;
                 myPlayer = players[id];
                 currentScore = myPlayer.score || 0;
-                currentCoins = myPlayer.coins || 0;
                 currentHealth = myPlayer.health || 100;
+                currentLevel = myPlayer.level || 0;
+                currentKills = myPlayer.kills || 0;
                 scoreElement.innerText = formatNumber(currentScore);
-                coinGameValue.innerText = formatNumber(currentCoins);
-                coinAmount.innerText = formatNumber(currentCoins);
+                levelElement.innerText = currentLevel;
                 healthValue.innerText = currentHealth;
                 healthFill.style.width = `${(currentHealth / (myPlayer.maxHealth || 100)) * 100}%`;
-                upgrades.damage = myPlayer.damage || 1;
-                upgrades.speed = myPlayer.speed || 3;
-                damageLevelSpan.innerText = upgrades.damage;
-                fireRateLevelSpan.innerText = Math.floor(300 / (myPlayer.fireRate || 300));
-                speedLevelSpan.innerText = Math.floor(upgrades.speed);
-                equippedSkin = myPlayer.skin || 'classic';
-                ownedSkins = myPlayer.skins || ['classic'];
-                renderSkinShop();
+                killsElement.innerText = currentKills;
+                fireRate = myPlayer.fireRate || 700;
+                shipDamage = myPlayer.damage || 8;
+                shipSpeed = myPlayer.speed || 5;
+                shipSize = myPlayer.size || 14;
             }
         }
     });
     
-    socket.on('currentZombies', (serverZombies) => { zombies = serverZombies; });
-    socket.on('zombiesUpdate', (serverZombies) => { zombies = serverZombies; });
-    socket.on('waveUpdate', (wave) => { currentWave = wave; waveValue.innerText = wave; });
-    socket.on('newPlayer', (playerData) => { players[playerData.id] = playerData; addChatMessage('System', `${playerData.username} joined!`, true); });
-    socket.on('playerMoved', (data) => { if (players[data.id]) { players[data.id].x = data.x; players[data.id].y = data.y; } });
-    socket.on('playerDisconnected', (playerId) => { if (players[playerId]) { addChatMessage('System', `${players[playerId].username} left`, true); delete players[playerId]; } });
+    socket.on('availableShips', (ships) => {
+        availableShips = ships;
+        updateShipList();
+    });
+    
+    socket.on('currentEnemies', (serverEnemies) => { enemies = serverEnemies; });
+    socket.on('enemiesUpdate', (serverEnemies) => { enemies = serverEnemies; });
+    socket.on('currentCrates', (serverCrates) => { crates = serverCrates; });
+    socket.on('cratesUpdate', (serverCrates) => { crates = serverCrates; });
+    socket.on('stationsUpdate', (stations) => { petrolStations = stations; });
+    
+    socket.on('newPlayer', (playerData) => {
+        players[playerData.id] = playerData;
+        addChatMessage('System', `${playerData.username} joined!`, true);
+    });
+    
+    socket.on('playerMoved', (data) => {
+        if (players[data.id]) {
+            players[data.id].x = data.x;
+            players[data.id].y = data.y;
+        }
+    });
+    
+    socket.on('playerDisconnected', (playerId) => {
+        if (players[playerId]) {
+            addChatMessage('System', `${players[playerId].username} left`, true);
+            delete players[playerId];
+        }
+    });
     
     socket.on('scoreUpdate', (data) => {
         if (data.id === myId) {
             if (data.score !== undefined) { currentScore = data.score; scoreElement.innerText = formatNumber(currentScore); }
-            if (data.coins !== undefined) { currentCoins = data.coins; coinGameValue.innerText = formatNumber(currentCoins); coinAmount.innerText = formatNumber(currentCoins); }
-            if (data.streak !== undefined) { currentStreak = data.streak; streakValue.innerText = currentStreak; }
+            if (data.level !== undefined) { currentLevel = data.level; levelElement.innerText = currentLevel; }
+            if (data.kills !== undefined) { currentKills = data.kills; killsElement.innerText = currentKills; }
+        }
+        if (players[data.id]) {
+            if (data.score !== undefined) players[data.id].score = data.score;
         }
     });
     
     socket.on('playerUpdate', (data) => {
         if (data.id === myId) {
             if (data.health !== undefined) { currentHealth = data.health; healthValue.innerText = currentHealth; healthFill.style.width = `${(currentHealth / (data.maxHealth || 100)) * 100}%`; }
-            if (data.damage !== undefined) { upgrades.damage = data.damage; damageLevelSpan.innerText = upgrades.damage; }
-            if (data.fireRate !== undefined) { fireRate = data.fireRate; fireRateLevelSpan.innerText = Math.floor(300 / fireRate); }
-            if (data.speed !== undefined) { upgrades.speed = data.speed; speedLevelSpan.innerText = Math.floor(upgrades.speed); }
+            if (data.damage !== undefined) { shipDamage = data.damage; fireRate = data.fireRate; shipSpeed = data.speed; shipSize = data.size; }
+            if (data.level !== undefined) { currentLevel = data.level; levelElement.innerText = currentLevel; }
         }
     });
     
-    socket.on('bulletShot', (bullet) => {
-        bullets.push(bullet);
-        setTimeout(() => { bullets = bullets.filter(b => b.id !== bullet.id); }, 100);
+    socket.on('projectileShot', (projectile) => {
+        bullets.push(projectile);
+        setTimeout(() => { bullets = bullets.filter(b => b.id !== projectile.id); }, 200);
     });
     
-    socket.on('zombieKilled', (zombieId) => { delete zombies[zombieId]; });
-    socket.on('zombieDamaged', (data) => { if (zombies[data.id]) zombies[data.id].health = data.health; });
-    socket.on('chatMessage', (data) => { addChatMessage(data.username, data.message, data.isSystem); });
-    socket.on('skinUnlocked', (skinId) => { ownedSkins.push(skinId); renderSkinShop(); });
+    socket.on('enemyDestroyed', (enemyId) => {
+        enemies = enemies.filter(e => e.id !== enemyId);
+    });
     
-    document.querySelectorAll('.upgrade-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const upgrade = btn.getAttribute('data-upgrade');
-            socket.emit('upgrade', upgrade);
-        });
+    socket.on('enemyDamaged', (data) => {
+        const enemy = enemies.find(e => e.id === data.id);
+        if (enemy) enemy.health = data.health;
+    });
+    
+    socket.on('crateCollected', (crateId) => {
+        crates = crates.filter(c => c.id !== crateId);
+    });
+    
+    socket.on('chatMessage', (data) => {
+        addChatMessage(data.username, data.message);
     });
     
     window.addEventListener('keydown', (e) => {
@@ -703,8 +503,8 @@
         const scaleY = canvas.height / rect.height;
         let canvasX = (e.clientX - rect.left) * scaleX;
         let canvasY = (e.clientY - rect.top) * scaleY;
-        mouseX = (canvasX / zoom) + cameraX;
-        mouseY = (canvasY / zoom) + cameraY;
+        mouseX = canvasX + cameraX;
+        mouseY = canvasY + cameraY;
         mouseX = Math.min(Math.max(mouseX, 0), MAP_WIDTH);
         mouseY = Math.min(Math.max(mouseY, 0), MAP_HEIGHT);
     });
@@ -727,26 +527,7 @@
         const dy = mouseY - myPlayer.y;
         const angle = Math.atan2(dy, dx);
         
-        let isHeadshot = false;
-        for (const id in zombies) {
-            const z = zombies[id];
-            const distToZombie = Math.hypot(myPlayer.x - z.x, myPlayer.y - z.y);
-            if (distToZombie < 120) {
-                const angleToZombie = Math.atan2(z.y - myPlayer.y, z.x - myPlayer.x);
-                const angleDiff = Math.abs(angle - angleToZombie);
-                if (angleDiff < 0.25) {
-                    const headY = z.y - z.size * 0.7;
-                    const distToHead = Math.hypot(myPlayer.x - z.x, myPlayer.y - headY);
-                    if (distToHead < 100) isHeadshot = true;
-                }
-            }
-        }
-        
-        socket.emit('playerShoot', { angle: angle, isHeadshot: isHeadshot });
-        if (isHeadshot) {
-            const rect = canvas.getBoundingClientRect();
-            showFloatingText('💀 HEADSHOT! 💀', '#ff0000', rect.left + canvas.width/2 - 60, rect.top + canvas.height/2 - 30);
-        }
+        socket.emit('playerShoot', { angle: angle });
     }
     
     function movePlayer() {
@@ -760,192 +541,179 @@
             const len = Math.hypot(moveX, moveY);
             moveX /= len;
             moveY /= len;
-            myPlayer.x += moveX * myPlayer.speed;
-            myPlayer.y += moveY * myPlayer.speed;
+            myPlayer.x += moveX * shipSpeed;
+            myPlayer.y += moveY * shipSpeed;
         }
-        myPlayer.x = Math.min(Math.max(myPlayer.x, 25), MAP_WIDTH - 25);
-        myPlayer.y = Math.min(Math.max(myPlayer.y, 25), MAP_HEIGHT - 25);
+        myPlayer.x = Math.min(Math.max(myPlayer.x, 20), MAP_WIDTH - 20);
+        myPlayer.y = Math.min(Math.max(myPlayer.y, 20), MAP_HEIGHT - 20);
     }
     
     function updateCamera() {
         if (!myPlayer) return;
-        const effectiveWidth = canvas.width / zoom;
-        const effectiveHeight = canvas.height / zoom;
-        cameraX = myPlayer.x - effectiveWidth / 2;
-        cameraY = myPlayer.y - effectiveHeight / 2;
-        cameraX = Math.min(Math.max(cameraX, 0), MAP_WIDTH - effectiveWidth);
-        cameraY = Math.min(Math.max(cameraY, 0), MAP_HEIGHT - effectiveHeight);
+        cameraX = myPlayer.x - canvas.width / 2;
+        cameraY = myPlayer.y - canvas.height / 2;
+        cameraX = Math.min(Math.max(cameraX, 0), MAP_WIDTH - canvas.width);
+        cameraY = Math.min(Math.max(cameraY, 0), MAP_HEIGHT - canvas.height);
     }
     
     function draw() {
         if (!myPlayer) return;
         updateCamera();
         
-        ctx.fillStyle = '#0a2a1a';
+        // Ocean background
+        ctx.fillStyle = '#0a2a4a';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Adaptive grid based on zoom
-        let gridSize = 200;
-        if (zoom < 0.6) gridSize = 500;
-        if (zoom < 0.4) gridSize = 1000;
-        if (zoom > 1.5) gridSize = 100;
-        
-        ctx.strokeStyle = '#1a4a2a';
+        // Draw water waves
+        ctx.strokeStyle = '#1a4a6a';
         ctx.lineWidth = 1;
-        const startX = Math.floor(cameraX / gridSize) * gridSize;
-        const startY = Math.floor(cameraY / gridSize) * gridSize;
-        for (let x = startX; x < cameraX + canvas.width / zoom; x += gridSize) {
-            const screenX = (x - cameraX) * zoom;
+        for (let i = 0; i < 20; i++) {
             ctx.beginPath();
-            ctx.moveTo(screenX, 0);
-            ctx.lineTo(screenX, canvas.height);
+            ctx.moveTo(0, i * 50 + (Date.now() * 0.02) % 50);
+            ctx.lineTo(canvas.width, i * 50 + (Date.now() * 0.02) % 50);
             ctx.stroke();
         }
-        for (let y = startY; y < cameraY + canvas.height / zoom; y += gridSize) {
-            const screenY = (y - cameraY) * zoom;
-            ctx.beginPath();
-            ctx.moveTo(0, screenY);
-            ctx.lineTo(canvas.width, screenY);
-            ctx.stroke();
+        
+        // Draw petrol stations
+        for (const station of petrolStations) {
+            const screenX = station.x - cameraX;
+            const screenY = station.y - cameraY;
+            if (screenX + station.radius > 0 && screenX - station.radius < canvas.width &&
+                screenY + station.radius > 0 && screenY - station.radius < canvas.height) {
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, station.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 200, 100, 0.15)';
+                ctx.fill();
+                ctx.strokeStyle = '#00ff44';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.font = '24px Arial';
+                ctx.fillStyle = '#00ff44';
+                ctx.fillText('⛽', screenX - 15, screenY + 10);
+                
+                // Floating particles
+                for (let i = 0; i < 3; i++) {
+                    ctx.fillStyle = `rgba(0, 255, 68, ${0.3 + Math.sin(Date.now() * 0.005 + i) * 0.2})`;
+                    ctx.beginPath();
+                    ctx.arc(screenX + Math.sin(Date.now() * 0.003 + i) * 20, screenY + Math.cos(Date.now() * 0.004 + i) * 20, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+        
+        // Draw supply crates
+        for (const crate of crates) {
+            const screenX = crate.x - cameraX;
+            const screenY = crate.y - cameraY;
+            if (screenX > -30 && screenX < canvas.width + 30 && screenY > -30 && screenY < canvas.height + 30) {
+                ctx.fillStyle = crate.color;
+                ctx.fillRect(screenX - 12, screenY - 10, 24, 20);
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(screenX - 14, screenY - 12, 28, 4);
+                ctx.font = '16px Arial';
+                ctx.fillStyle = 'white';
+                ctx.fillText(crate.icon, screenX - 8, screenY + 6);
+            }
+        }
+        
+        // Draw enemies
+        for (const enemy of enemies) {
+            const screenX = enemy.x - cameraX;
+            const screenY = enemy.y - cameraY;
+            if (screenX > -50 && screenX < canvas.width + 50 && screenY > -50 && screenY < canvas.height + 50) {
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, enemy.size, 0, Math.PI * 2);
+                ctx.fillStyle = enemy.color;
+                ctx.fill();
+                ctx.fillStyle = 'white';
+                ctx.font = '12px Arial';
+                ctx.fillText(enemy.name, screenX - 25, screenY - 20);
+                
+                // Health bar
+                const healthPercent = enemy.health / enemy.maxHealth;
+                ctx.fillStyle = '#ef4444';
+                ctx.fillRect(screenX - 25, screenY - 30, 50, 5);
+                ctx.fillStyle = '#22c55e';
+                ctx.fillRect(screenX - 25, screenY - 30, 50 * healthPercent, 5);
+            }
         }
         
         // Draw other players
         for (const id in players) {
             if (id === myId) continue;
             const p = players[id];
-            const screenX = (p.x - cameraX) * zoom;
-            const screenY = (p.y - cameraY) * zoom;
-            if (screenX > -60 && screenX < canvas.width + 60 && screenY > -60 && screenY < canvas.height + 60) {
-                const skinColor = SKINS[p.skin]?.color || '#3b82f6';
+            const screenX = p.x - cameraX;
+            const screenY = p.y - cameraY;
+            if (screenX > -50 && screenX < canvas.width + 50 && screenY > -50 && screenY < canvas.height + 50) {
                 ctx.beginPath();
-                ctx.arc(screenX, screenY, 18 * zoom, 0, Math.PI * 2);
-                ctx.fillStyle = skinColor;
+                ctx.arc(screenX, screenY, p.size || 16, 0, Math.PI * 2);
+                ctx.fillStyle = p.color || '#ef4444';
                 ctx.fill();
                 ctx.fillStyle = 'white';
-                ctx.font = `${12 * zoom}px Arial`;
-                ctx.fillText(p.username, screenX - 25 * zoom, screenY - 25 * zoom);
+                ctx.font = '12px Arial';
+                ctx.fillText(p.username, screenX - 20, screenY - 20);
                 ctx.fillStyle = '#fbbf24';
-                ctx.font = `${10 * zoom}px Arial`;
-                ctx.fillText(`💰${formatNumber(p.score)}`, screenX - 18 * zoom, screenY + 28 * zoom);
-            }
-        }
-        
-        // Draw zombies
-        for (const id in zombies) {
-            const z = zombies[id];
-            const screenX = (z.x - cameraX) * zoom;
-            const screenY = (z.y - cameraY) * zoom;
-            const size = z.size * zoom;
-            if (screenX > -80 && screenX < canvas.width + 80 && screenY > -80 && screenY < canvas.height + 80) {
-                ctx.beginPath();
-                ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
-                ctx.fillStyle = z.color;
-                ctx.fill();
-                
-                // Eyes
-                ctx.fillStyle = 'white';
-                ctx.beginPath();
-                ctx.arc(screenX - 7 * zoom, screenY - 6 * zoom, 6 * zoom, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(screenX + 7 * zoom, screenY - 6 * zoom, 6 * zoom, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.arc(screenX - 7 * zoom, screenY - 6 * zoom, 3 * zoom, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(screenX + 7 * zoom, screenY - 6 * zoom, 3 * zoom, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Mouth
-                ctx.beginPath();
-                ctx.arc(screenX, screenY + 6 * zoom, 12 * zoom, 0.1, Math.PI - 0.1);
-                ctx.strokeStyle = '#000';
-                ctx.lineWidth = 2 * zoom;
-                ctx.stroke();
-                
-                // Health bar for tanks/boss
-                if (z.health > 1) {
-                    ctx.fillStyle = '#ef4444';
-                    ctx.fillRect(screenX - 30 * zoom, screenY - 30 * zoom, 60 * zoom, 6 * zoom);
-                    ctx.fillStyle = '#22c55e';
-                    ctx.fillRect(screenX - 30 * zoom, screenY - 30 * zoom, 60 * zoom * (z.health / z.maxHealth), 6 * zoom);
-                }
+                ctx.font = '10px Arial';
+                ctx.fillText(`Lvl ${p.level}`, screenX - 15, screenY + 25);
             }
         }
         
         // Draw bullets
         for (const bullet of bullets) {
+            const progress = Math.min(1, (Date.now() - bullet.startTime) / 200);
+            const currentX = bullet.startX + (bullet.endX - bullet.startX) * progress;
+            const currentY = bullet.startY + (bullet.endY - bullet.startY) * progress;
+            const screenX = currentX - cameraX;
+            const screenY = currentY - cameraY;
             ctx.beginPath();
-            ctx.arc((bullet.x - cameraX) * zoom, (bullet.y - cameraY) * zoom, 5 * zoom, 0, Math.PI * 2);
+            ctx.arc(screenX, screenY, 5, 0, Math.PI * 2);
             ctx.fillStyle = '#fbbf24';
             ctx.fill();
-            ctx.shadowBlur = 5 * zoom;
+            ctx.shadowBlur = 8;
             ctx.shadowColor = '#fbbf24';
             ctx.fill();
             ctx.shadowBlur = 0;
         }
         
         // Draw my player
-        const myScreenX = (myPlayer.x - cameraX) * zoom;
-        const myScreenY = (myPlayer.y - cameraY) * zoom;
-        const mySize = 22 * zoom;
-        const mySkinColor = SKINS[equippedSkin]?.color || '#3b82f6';
+        const myScreenX = myPlayer.x - cameraX;
+        const myScreenY = myPlayer.y - cameraY;
         ctx.beginPath();
-        ctx.arc(myScreenX, myScreenY, mySize, 0, Math.PI * 2);
-        ctx.fillStyle = mySkinColor;
+        ctx.arc(myScreenX, myScreenY, shipSize, 0, Math.PI * 2);
+        ctx.fillStyle = '#3b82f6';
         ctx.fill();
         ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2 * zoom;
+        ctx.lineWidth = 2;
         ctx.stroke();
         
         // Gun direction
         const angle = Math.atan2(mouseY - myPlayer.y, mouseX - myPlayer.x);
-        const gunX = myScreenX + Math.cos(angle) * (28 * zoom);
-        const gunY = myScreenY + Math.sin(angle) * (28 * zoom);
+        const gunX = myScreenX + Math.cos(angle) * (shipSize + 5);
+        const gunY = myScreenY + Math.sin(angle) * (shipSize + 5);
         ctx.beginPath();
         ctx.moveTo(myScreenX, myScreenY);
         ctx.lineTo(gunX, gunY);
         ctx.strokeStyle = '#fbbf24';
-        ctx.lineWidth = 4 * zoom;
+        ctx.lineWidth = 4;
         ctx.stroke();
         
         ctx.fillStyle = 'white';
-        ctx.font = `bold ${14 * zoom}px Arial`;
-        ctx.fillText(myPlayer.username, myScreenX - 30 * zoom, myScreenY - 30 * zoom);
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText(myPlayer.username, myScreenX - 25, myScreenY - 25);
         
         // Health bar
+        const healthPercent = currentHealth / (myPlayer.maxHealth || 100);
         ctx.fillStyle = '#ef4444';
-        ctx.fillRect(myScreenX - 30 * zoom, myScreenY - 42 * zoom, 60 * zoom, 6 * zoom);
+        ctx.fillRect(myScreenX - 30, myScreenY - 38, 60, 6);
         ctx.fillStyle = '#22c55e';
-        ctx.fillRect(myScreenX - 30 * zoom, myScreenY - 42 * zoom, 60 * zoom * (currentHealth / (myPlayer.maxHealth || 100)), 6 * zoom);
+        ctx.fillRect(myScreenX - 30, myScreenY - 38, 60 * healthPercent, 6);
         
-        // Streak effects
-        if (currentStreak >= 5) {
-            ctx.shadowBlur = 15 * zoom;
-            ctx.shadowColor = '#ff6600';
-            ctx.beginPath();
-            ctx.arc(myScreenX, myScreenY, 26 * zoom, 0, Math.PI * 2);
-            ctx.strokeStyle = '#ff6600';
-            ctx.lineWidth = 3 * zoom;
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-        }
-        if (currentStreak >= 10) {
-            ctx.shadowBlur = 20 * zoom;
-            ctx.shadowColor = '#ff0000';
-            ctx.beginPath();
-            ctx.arc(myScreenX, myScreenY, 30 * zoom, 0, Math.PI * 2);
-            ctx.strokeStyle = '#ff0000';
-            ctx.lineWidth = 4 * zoom;
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-        }
+        // Level indicator
+        ctx.fillStyle = '#fbbf24';
+        ctx.font = 'bold 12px Arial';
+        ctx.fillText(`Lvl ${currentLevel}`, myScreenX + 15, myScreenY - 20);
     }
-    
-    const savedSkin = localStorage.getItem('zombieSkin');
-    if (savedSkin) equippedSkin = savedSkin;
 </script>
 </body>
 </html>
