@@ -20,49 +20,61 @@
             font-family: Arial, sans-serif;
             overflow: hidden;
         }
-        #joinScreen, #gameScreen {
+        #joinScreen {
             background: #111827;
-            padding: 30px;
-            border-radius: 20px;
+            padding: 40px;
+            border-radius: 24px;
             text-align: center;
-            max-width: 500px;
             width: 90%;
+            max-width: 900px;
             max-height: 90vh;
             overflow-y: auto;
         }
+        #gameScreen {
+            background: #111827;
+            padding: 0;
+            border-radius: 16px;
+        }
         #joinScreen h1 {
             color: #fbbf24;
-            margin-bottom: 20px;
-            font-size: 36px;
+            margin-bottom: 25px;
+            font-size: 48px;
+            text-shadow: 0 0 10px #fbbf24;
         }
         #joinScreen input {
             background: #1f2937;
             border: 1px solid #374151;
             color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 16px;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 18px;
             width: 100%;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             outline: none;
         }
-        #joinScreen button {
+        #joinScreen input:focus {
+            border-color: #fbbf24;
+        }
+        #joinBtn {
             background: #3b82f6;
             border: none;
             color: white;
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-size: 16px;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 18px;
             cursor: pointer;
             width: 100%;
+            font-weight: bold;
+            margin-bottom: 10px;
         }
-        #joinScreen button:hover {
+        #joinBtn:hover {
             background: #2563eb;
         }
         .daily-btn {
             background: #fbbf24;
             color: #1f2937;
-            margin-top: 10px;
+            width: 100%;
+            margin-bottom: 20px;
         }
         .daily-btn:hover {
             background: #f59e0b;
@@ -70,62 +82,67 @@
         .stats-container {
             display: flex;
             justify-content: space-between;
-            gap: 10px;
-            margin: 15px 0;
+            gap: 15px;
+            margin: 20px 0;
             flex-wrap: wrap;
         }
         .coin-display {
             background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            border-radius: 30px;
-            padding: 8px 15px;
+            border-radius: 40px;
+            padding: 12px 25px;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             font-weight: bold;
             color: #1f2937;
+            font-size: 20px;
         }
         .leaderboard-container {
             background: #1f2937;
-            border-radius: 12px;
-            padding: 10px;
+            border-radius: 16px;
+            padding: 15px;
             margin: 15px 0;
             border: 1px solid #374151;
         }
         .leaderboard-container h3 {
             color: #fbbf24;
-            font-size: 14px;
-            margin-bottom: 8px;
+            font-size: 18px;
+            margin-bottom: 12px;
         }
         .leaderboard-list {
-            max-height: 150px;
+            max-height: 200px;
             overflow-y: auto;
         }
         .leaderboard-item {
             display: flex;
             justify-content: space-between;
-            padding: 5px 8px;
+            padding: 8px 12px;
             border-bottom: 1px solid #374151;
-            font-size: 12px;
+            font-size: 14px;
             color: white;
         }
-        .leaderboard-item.top-1 { color: #ffd700; font-weight: bold; }
+        .leaderboard-item.top-1 { color: #ffd700; font-weight: bold; font-size: 16px; }
         .leaderboard-item.top-2 { color: #c0c0c0; }
         .leaderboard-item.top-3 { color: #cd7f32; }
         .skin-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin: 10px 0;
-            max-height: 200px;
+            gap: 12px;
+            margin: 15px 0;
+            max-height: 250px;
             overflow-y: auto;
         }
         .skin-card {
             background: #1f2937;
-            border-radius: 10px;
-            padding: 8px;
+            border-radius: 12px;
+            padding: 12px;
             text-align: center;
             border: 2px solid #374151;
             cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .skin-card:hover {
+            transform: translateY(-3px);
         }
         .skin-card.owned {
             border-color: #fbbf24;
@@ -136,18 +153,20 @@
             background: #1e3a5f;
         }
         .skin-preview {
-            width: 50px;
-            height: 50px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
-            margin: 0 auto 5px;
+            margin: 0 auto 8px;
         }
         .skin-name {
-            font-size: 10px;
+            font-size: 12px;
             color: white;
+            font-weight: bold;
         }
         .skin-price {
-            font-size: 9px;
+            font-size: 11px;
             color: #fbbf24;
+            margin-top: 4px;
         }
         .errorMsg {
             color: #ef4444;
@@ -155,14 +174,15 @@
             font-size: 12px;
         }
         ::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
         }
         ::-webkit-scrollbar-track {
             background: #1f2937;
+            border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb {
             background: #fbbf24;
-            border-radius: 3px;
+            border-radius: 4px;
         }
         #gameContainer {
             position: relative;
@@ -180,7 +200,7 @@
             right: 10px;
             display: flex;
             justify-content: space-between;
-            gap: 8px;
+            gap: 10px;
             flex-wrap: wrap;
             z-index: 10;
             pointer-events: none;
@@ -189,67 +209,67 @@
             pointer-events: auto;
             background: rgba(0,0,0,0.8);
             backdrop-filter: blur(5px);
-            padding: 6px 12px;
+            padding: 8px 15px;
             border-radius: 8px;
             color: white;
-            font-size: 12px;
+            font-size: 14px;
             border: 1px solid #374151;
         }
         #upgradePanel {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             flex-wrap: wrap;
         }
         .upgrade-btn {
             background: #3b82f6;
             border: none;
             color: white;
-            padding: 4px 10px;
+            padding: 6px 14px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 11px;
+            font-size: 12px;
             pointer-events: auto;
         }
         .upgrade-btn:hover {
             background: #2563eb;
         }
         .health-bar {
-            width: 80px;
-            height: 6px;
+            width: 100px;
+            height: 8px;
             background: #374151;
-            border-radius: 3px;
+            border-radius: 4px;
             overflow: hidden;
             display: inline-block;
-            margin-left: 6px;
+            margin-left: 8px;
         }
         .health-fill {
             height: 100%;
             width: 100%;
             background: #22c55e;
-            border-radius: 3px;
+            border-radius: 4px;
             transition: width 0.2s;
         }
         #chatOverlay {
             position: absolute;
             bottom: 10px;
             left: 10px;
-            width: 260px;
+            width: 300px;
             background: rgba(0,0,0,0.85);
             border-radius: 8px;
             border: 1px solid #374151;
             z-index: 10;
         }
         #chatMessages {
-            height: 90px;
+            height: 100px;
             overflow-y: auto;
-            padding: 5px;
-            font-size: 10px;
+            padding: 6px;
+            font-size: 11px;
             color: #ccc;
         }
         #chatInputArea {
             display: flex;
-            padding: 5px;
-            gap: 5px;
+            padding: 6px;
+            gap: 6px;
             border-top: 1px solid #374151;
         }
         #chatInput {
@@ -257,17 +277,17 @@
             background: #1f2937;
             border: 1px solid #374151;
             color: white;
-            padding: 4px 6px;
-            border-radius: 5px;
+            padding: 6px 8px;
+            border-radius: 6px;
             outline: none;
-            font-size: 10px;
+            font-size: 11px;
         }
         #chatSend {
             background: #3b82f6;
             border: none;
             color: white;
-            padding: 4px 8px;
-            border-radius: 5px;
+            padding: 6px 12px;
+            border-radius: 6px;
             cursor: pointer;
         }
         .chat-system {
@@ -282,15 +302,15 @@
             bottom: 10px;
             right: 10px;
             background: rgba(0,0,0,0.5);
-            padding: 3px 6px;
+            padding: 4px 8px;
             border-radius: 4px;
-            font-size: 8px;
+            font-size: 9px;
             color: #888;
             pointer-events: none;
         }
         @keyframes float {
             0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-40px); opacity: 0; }
+            100% { transform: translateY(-50px); opacity: 0; }
         }
         .floating-text {
             position: fixed;
@@ -298,6 +318,8 @@
             font-weight: bold;
             z-index: 1000;
             animation: float 1s ease-out forwards;
+            font-size: 24px;
+            text-shadow: 0 0 3px black;
         }
     </style>
 </head>
@@ -305,15 +327,15 @@
 <div id="joinScreen">
     <h1>🧟 ZOMBIE.io</h1>
     <input type="text" id="usernameInput" placeholder="Enter username" maxlength="20">
-    <button id="joinBtn">Join Game</button>
-    <button id="dailyBtn" class="daily-btn" style="margin-top:10px;">🎁 Daily Reward (500 coins)</button>
+    <button id="joinBtn">🔫 JOIN GAME</button>
+    <button id="dailyBtn" class="daily-btn">🎁 DAILY REWARD (500 coins)</button>
     
     <div class="stats-container">
         <div class="coin-display">🪙 <span id="coinAmount">0</span> coins</div>
     </div>
     
     <div class="leaderboard-container">
-        <h3>🏆 TOP 10 PLAYERS 🏆</h3>
+        <h3>🏆 TOP 10 SURVIVORS 🏆</h3>
         <div id="leaderboardList" class="leaderboard-list"></div>
     </div>
     
@@ -327,7 +349,7 @@
 
 <div id="gameScreen" class="hidden">
     <div id="gameContainer">
-        <canvas id="gameCanvas" width="1200" height="800"></canvas>
+        <canvas id="gameCanvas" width="1400" height="900"></canvas>
         
         <div id="ui">
             <div class="stats">🎯 Score: <span id="scoreValue">0</span></div>
@@ -336,7 +358,7 @@
             <div class="stats">🔥 <span id="streakValue">0</span></div>
             <div id="waveInfo">🧟 Wave <span id="waveValue">1</span></div>
             <div id="upgradePanel">
-                <button class="upgrade-btn" data-upgrade="damage">💪 Dmg (<span id="damageLevel">1</span>)</button>
+                <button class="upgrade-btn" data-upgrade="damage">💪 Damage (<span id="damageLevel">1</span>)</button>
                 <button class="upgrade-btn" data-upgrade="fireRate">⚡ Rate (<span id="fireRateLevel">1</span>)</button>
                 <button class="upgrade-btn" data-upgrade="speed">🏃 Speed (<span id="speedLevel">1</span>)</button>
                 <button class="upgrade-btn" data-upgrade="health">❤️ HP (<span id="healthLevel">1</span>)</button>
@@ -371,7 +393,6 @@
     let currentWave = 1;
     let currentStreak = 0;
     let bullets = [];
-    let headshotMode = false;
     
     let cameraX = 0, cameraY = 0;
     let mouseX = 0, mouseY = 0;
@@ -383,8 +404,9 @@
     let ownedSkins = ['classic'];
     let equippedSkin = 'classic';
     
-    const MAP_WIDTH = 3000;
-    const MAP_HEIGHT = 3000;
+    // BIGGER MAP - 5000x5000
+    const MAP_WIDTH = 5000;
+    const MAP_HEIGHT = 5000;
     
     const SKINS = {
         classic: { name: 'Classic', color: '#3b82f6', price: 0 },
@@ -434,8 +456,6 @@
         div.style.left = x + 'px';
         div.style.top = y + 'px';
         div.style.color = color;
-        div.style.fontSize = '20px';
-        div.style.textShadow = '0 0 3px black';
         document.body.appendChild(div);
         setTimeout(() => div.remove(), 1000);
     }
@@ -443,7 +463,7 @@
     function addChatMessage(sender, message, isSystem = false) {
         const div = document.createElement('div');
         if (isSystem) {
-            div.innerHTML = `<span class="chat-system">🔔 ${message}</span>`;
+            div.innerHTML = `<span class="chat-system">🔔 ${message}</span>";
         } else {
             div.innerHTML = `<span>💬 ${sender}:</span> ${message}`;
         }
@@ -547,10 +567,7 @@
     };
     
     socket.on('connect', () => console.log('Connected'));
-    
-    socket.on('leaderboardUpdate', (leaderboard) => {
-        updateLeaderboardDisplay(leaderboard);
-    });
+    socket.on('leaderboardUpdate', (leaderboard) => updateLeaderboardDisplay(leaderboard));
     
     socket.on('currentPlayers', (serverPlayers) => {
         players = serverPlayers;
@@ -589,12 +606,7 @@
         if (data.id === myId) {
             if (data.score !== undefined) { currentScore = data.score; scoreElement.innerText = formatNumber(currentScore); }
             if (data.coins !== undefined) { currentCoins = data.coins; coinGameValue.innerText = formatNumber(currentCoins); coinAmount.innerText = formatNumber(currentCoins); }
-            if (data.kills !== undefined) { }
             if (data.streak !== undefined) { currentStreak = data.streak; streakValue.innerText = currentStreak; }
-        }
-        if (players[data.id]) {
-            if (data.score !== undefined) players[data.id].score = data.score;
-            if (data.coins !== undefined) players[data.id].coins = data.coins;
         }
     });
     
@@ -650,6 +662,8 @@
         let canvasY = (e.clientY - rect.top) * scaleY;
         mouseX = canvasX + cameraX;
         mouseY = canvasY + cameraY;
+        mouseX = Math.min(Math.max(mouseX, 0), MAP_WIDTH);
+        mouseY = Math.min(Math.max(mouseY, 0), MAP_HEIGHT);
     });
     
     canvas.addEventListener('mousedown', (e) => {
@@ -670,18 +684,17 @@
         const dy = mouseY - myPlayer.y;
         const angle = Math.atan2(dy, dx);
         
-        // Check for headshot (aiming at top of zombie)
         let isHeadshot = false;
         for (const id in zombies) {
             const z = zombies[id];
             const distToZombie = Math.hypot(myPlayer.x - z.x, myPlayer.y - z.y);
-            if (distToZombie < 100) {
+            if (distToZombie < 120) {
                 const angleToZombie = Math.atan2(z.y - myPlayer.y, z.x - myPlayer.x);
                 const angleDiff = Math.abs(angle - angleToZombie);
-                if (angleDiff < 0.3) {
-                    const headY = z.y - z.size * 0.6;
+                if (angleDiff < 0.25) {
+                    const headY = z.y - z.size * 0.7;
                     const distToHead = Math.hypot(myPlayer.x - z.x, myPlayer.y - headY);
-                    if (distToHead < 80) isHeadshot = true;
+                    if (distToHead < 100) isHeadshot = true;
                 }
             }
         }
@@ -689,7 +702,7 @@
         socket.emit('playerShoot', { angle: angle, isHeadshot: isHeadshot });
         if (isHeadshot) {
             const rect = canvas.getBoundingClientRect();
-            showFloatingText('HEADSHOT!', '#ff0000', rect.left + canvas.width/2, rect.top + canvas.height/2);
+            showFloatingText('💀 HEADSHOT! 💀', '#ff0000', rect.left + canvas.width/2 - 60, rect.top + canvas.height/2 - 30);
         }
     }
     
@@ -707,8 +720,8 @@
             myPlayer.x += moveX * myPlayer.speed;
             myPlayer.y += moveY * myPlayer.speed;
         }
-        myPlayer.x = Math.min(Math.max(myPlayer.x, 20), MAP_WIDTH - 20);
-        myPlayer.y = Math.min(Math.max(myPlayer.y, 20), MAP_HEIGHT - 20);
+        myPlayer.x = Math.min(Math.max(myPlayer.x, 25), MAP_WIDTH - 25);
+        myPlayer.y = Math.min(Math.max(myPlayer.y, 25), MAP_HEIGHT - 25);
     }
     
     function updateCamera() {
@@ -726,24 +739,45 @@
         ctx.fillStyle = '#0a2a1a';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
+        // Draw grid for better orientation
+        ctx.strokeStyle = '#1a4a2a';
+        ctx.lineWidth = 1;
+        const gridSize = 200;
+        const startX = Math.floor(cameraX / gridSize) * gridSize;
+        const startY = Math.floor(cameraY / gridSize) * gridSize;
+        for (let x = startX; x < cameraX + canvas.width; x += gridSize) {
+            const screenX = x - cameraX;
+            ctx.beginPath();
+            ctx.moveTo(screenX, 0);
+            ctx.lineTo(screenX, canvas.height);
+            ctx.stroke();
+        }
+        for (let y = startY; y < cameraY + canvas.height; y += gridSize) {
+            const screenY = y - cameraY;
+            ctx.beginPath();
+            ctx.moveTo(0, screenY);
+            ctx.lineTo(canvas.width, screenY);
+            ctx.stroke();
+        }
+        
         // Draw other players
         for (const id in players) {
             if (id === myId) continue;
             const p = players[id];
             const screenX = p.x - cameraX;
             const screenY = p.y - cameraY;
-            if (screenX > -50 && screenX < canvas.width + 50 && screenY > -50 && screenY < canvas.height + 50) {
+            if (screenX > -60 && screenX < canvas.width + 60 && screenY > -60 && screenY < canvas.height + 60) {
                 const skinColor = SKINS[p.skin]?.color || '#3b82f6';
                 ctx.beginPath();
-                ctx.arc(screenX, screenY, 15, 0, Math.PI * 2);
+                ctx.arc(screenX, screenY, 18, 0, Math.PI * 2);
                 ctx.fillStyle = skinColor;
                 ctx.fill();
                 ctx.fillStyle = 'white';
-                ctx.font = '10px Arial';
-                ctx.fillText(p.username, screenX - 20, screenY - 20);
+                ctx.font = '12px Arial';
+                ctx.fillText(p.username, screenX - 25, screenY - 25);
                 ctx.fillStyle = '#fbbf24';
-                ctx.font = '8px Arial';
-                ctx.fillText(`💰${formatNumber(p.score)}`, screenX - 15, screenY + 25);
+                ctx.font = '10px Arial';
+                ctx.fillText(`💰${formatNumber(p.score)}`, screenX - 18, screenY + 28);
             }
         }
         
@@ -752,7 +786,7 @@
             const z = zombies[id];
             const screenX = z.x - cameraX;
             const screenY = z.y - cameraY;
-            if (screenX > -60 && screenX < canvas.width + 60 && screenY > -60 && screenY < canvas.height + 60) {
+            if (screenX > -80 && screenX < canvas.width + 80 && screenY > -80 && screenY < canvas.height + 80) {
                 ctx.beginPath();
                 ctx.arc(screenX, screenY, z.size, 0, Math.PI * 2);
                 ctx.fillStyle = z.color;
@@ -761,32 +795,32 @@
                 // Eyes
                 ctx.fillStyle = 'white';
                 ctx.beginPath();
-                ctx.arc(screenX - 6, screenY - 5, 5, 0, Math.PI * 2);
+                ctx.arc(screenX - 7, screenY - 6, 6, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.beginPath();
-                ctx.arc(screenX + 6, screenY - 5, 5, 0, Math.PI * 2);
+                ctx.arc(screenX + 7, screenY - 6, 6, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.fillStyle = '#000';
                 ctx.beginPath();
-                ctx.arc(screenX - 6, screenY - 5, 2.5, 0, Math.PI * 2);
+                ctx.arc(screenX - 7, screenY - 6, 3, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.beginPath();
-                ctx.arc(screenX + 6, screenY - 5, 2.5, 0, Math.PI * 2);
+                ctx.arc(screenX + 7, screenY - 6, 3, 0, Math.PI * 2);
                 ctx.fill();
                 
                 // Mouth
                 ctx.beginPath();
-                ctx.arc(screenX, screenY + 5, 10, 0.1, Math.PI - 0.1);
+                ctx.arc(screenX, screenY + 6, 12, 0.1, Math.PI - 0.1);
                 ctx.strokeStyle = '#000';
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
-                // Health bar
+                // Health bar for tanks/boss
                 if (z.health > 1) {
                     ctx.fillStyle = '#ef4444';
-                    ctx.fillRect(screenX - 25, screenY - 25, 50, 5);
+                    ctx.fillRect(screenX - 30, screenY - 30, 60, 6);
                     ctx.fillStyle = '#22c55e';
-                    ctx.fillRect(screenX - 25, screenY - 25, 50 * (z.health / z.maxHealth), 5);
+                    ctx.fillRect(screenX - 30, screenY - 30, 60 * (z.health / z.maxHealth), 6);
                 }
             }
         }
@@ -794,9 +828,13 @@
         // Draw bullets
         for (const bullet of bullets) {
             ctx.beginPath();
-            ctx.arc(bullet.x - cameraX, bullet.y - cameraY, 4, 0, Math.PI * 2);
+            ctx.arc(bullet.x - cameraX, bullet.y - cameraY, 5, 0, Math.PI * 2);
             ctx.fillStyle = '#fbbf24';
             ctx.fill();
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = '#fbbf24';
+            ctx.fill();
+            ctx.shadowBlur = 0;
         }
         
         // Draw my player
@@ -804,7 +842,7 @@
         const myScreenY = myPlayer.y - cameraY;
         const mySkinColor = SKINS[equippedSkin]?.color || '#3b82f6';
         ctx.beginPath();
-        ctx.arc(myScreenX, myScreenY, 18, 0, Math.PI * 2);
+        ctx.arc(myScreenX, myScreenY, 22, 0, Math.PI * 2);
         ctx.fillStyle = mySkinColor;
         ctx.fill();
         ctx.strokeStyle = 'white';
@@ -813,33 +851,33 @@
         
         // Gun direction
         const angle = Math.atan2(mouseY - myPlayer.y, mouseX - myPlayer.x);
-        const gunX = myScreenX + Math.cos(angle) * 22;
-        const gunY = myScreenY + Math.sin(angle) * 22;
+        const gunX = myScreenX + Math.cos(angle) * 28;
+        const gunY = myScreenY + Math.sin(angle) * 28;
         ctx.beginPath();
         ctx.moveTo(myScreenX, myScreenY);
         ctx.lineTo(gunX, gunY);
         ctx.strokeStyle = '#fbbf24';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 4;
         ctx.stroke();
         
         ctx.fillStyle = 'white';
-        ctx.font = 'bold 12px Arial';
-        ctx.fillText(myPlayer.username, myScreenX - 25, myScreenY - 25);
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText(myPlayer.username, myScreenX - 30, myScreenY - 30);
         
         // Health bar
         ctx.fillStyle = '#ef4444';
-        ctx.fillRect(myScreenX - 25, myScreenY - 35, 50, 5);
+        ctx.fillRect(myScreenX - 30, myScreenY - 42, 60, 6);
         ctx.fillStyle = '#22c55e';
-        ctx.fillRect(myScreenX - 25, myScreenY - 35, 50 * (currentHealth / (myPlayer.maxHealth || 100)), 5);
+        ctx.fillRect(myScreenX - 30, myScreenY - 42, 60 * (currentHealth / (myPlayer.maxHealth || 100)), 6);
         
-        // Streak effect
+        // Streak effects
         if (currentStreak >= 5) {
             ctx.shadowBlur = 15;
             ctx.shadowColor = '#ff6600';
             ctx.beginPath();
-            ctx.arc(myScreenX, myScreenY, 22, 0, Math.PI * 2);
+            ctx.arc(myScreenX, myScreenY, 26, 0, Math.PI * 2);
             ctx.strokeStyle = '#ff6600';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             ctx.stroke();
             ctx.shadowBlur = 0;
         }
@@ -847,15 +885,14 @@
             ctx.shadowBlur = 20;
             ctx.shadowColor = '#ff0000';
             ctx.beginPath();
-            ctx.arc(myScreenX, myScreenY, 25, 0, Math.PI * 2);
+            ctx.arc(myScreenX, myScreenY, 30, 0, Math.PI * 2);
             ctx.strokeStyle = '#ff0000';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 4;
             ctx.stroke();
             ctx.shadowBlur = 0;
         }
     }
     
-    // Load saved skin
     const savedSkin = localStorage.getItem('zombieSkin');
     if (savedSkin) equippedSkin = savedSkin;
 </script>
